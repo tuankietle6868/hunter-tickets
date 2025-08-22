@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   build: {
@@ -20,5 +20,8 @@ export default defineConfig({
         assetFileNames: "assets/[name]-[hash][extname]",
       },
     },
+  },
+  test: {
+    environment: "jsdom",
   },
 });
