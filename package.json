@@ -1,5 +1,9 @@
 {
+  "scripts": {
+    "build": "vite build"
+  },
   "devDependencies": {
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^7.0.0"
   }
 }

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Form Autofill",
+  "version": "0.1.0",
+  "description": "Điền nhanh biểu mẫu bằng dữ liệu cá nhân lưu cục bộ.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://docs.google.com/forms/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background/serviceWorker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://docs.google.com/forms/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
