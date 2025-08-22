@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build output and bundler caches
+dist/
+build/
+out/
+.vite/
+.cache/
+
+# Test output
+coverage/
+.nyc_output/
+
+# TypeScript incremental build metadata
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Chrome/Edge extension packaging artifacts
+*.crx
+*.xpi
+
+# Editor and IDE settings
+.vscode/
+.idea/
+*.iml
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
