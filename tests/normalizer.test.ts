@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { normalize } from "../src/shared/normalizer";
+import { normalize, stripDiacritics } from "../src/shared/normalizer";
 
 describe("normalize", () => {
   it("lowercases text", () => {
@@ -17,5 +17,11 @@ describe("normalize", () => {
 
   it("applies all normalizations together", () => {
     expect(normalize("  EMAIL   LIÊN HỆ  ")).toBe("email liên hệ");
+  });
+});
+
+describe("stripDiacritics", () => {
+  it("removes Vietnamese tone marks and converts đ", () => {
+    expect(stripDiacritics("Số điện thoại")).toBe("so dien thoai");
   });
 });
