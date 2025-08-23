@@ -16,3 +16,13 @@ export function stripDiacritics(value: string): string {
     .replace(/\p{Diacritic}/gu, "")
     .replace(/đ/g, "d");
 }
+
+/** Removes common form-question decorations that do not describe the field. */
+export function cleanQuestionText(value: string): string {
+  return value
+    .replace(/^\s*\d+\s*\.\s*/, "")
+    .replace(/\*/g, "")
+    .replace(/\(\s*bắt\s+buộc\s*\)/giu, "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
