@@ -1,4 +1,5 @@
 import type { FieldType } from "./types";
+import { cleanQuestionText, normalize, stripDiacritics } from "./normalizer";
 
 export type AliasMatchType = "exact" | "contains" | "regex";
 
@@ -85,3 +86,33 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
   ],
   UNKNOWN: [],
 };
+
+/**
+ * Labels that resemble a supported field but identify a different kind of
+ * value. These are checked before positive alias scoring.
+ */
+export const NEGATIVE_PATTERNS: Record<FieldType, string[]> = {
+  FULL_NAME: [
+    "ten cong ty",
+    "ten dang nhap",
+    "ten nguoi nhan",
+    "company name",
+    "username",
+    "ten doanh nghiep",
+    "ten to chuc",
+    "account name",
+  ],
+  PHONE: ["ma xac minh", "otp", "so luong", "so dien thoai nguoi nhan"],
+  ID_NUMBER: ["ma so thue", "ma sinh vien", "ma don hang", "so ho chieu"],
+  EMAIL: ["email nguoi nhan", "email cong ty", "email dang nhap"],
+  DATE_OF_BIRTH: ["ngay cap", "ngay het han", "ngay dang ky"],
+  ADDRESS: ["dia chi giao hang", "dia chi nhan hang", "dia chi cong ty"],
+  UNKNOWN: [],
+};
+
+/** Returns true when a label must be excluded from matching the given field. */
+export function hasNegativeMatch(fieldType: FieldType, value: string): boolean {
+  const normalizedValue = stripDiacritics(normalize(cleanQuestionText(value)));
+
+  return NEGATIVE_PATTERNS[fieldType].some((pattern) => normalizedValue.includes(pattern));
+}

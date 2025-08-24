@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { ALIAS_DICTIONARY } from "../src/shared/aliasDictionary";
+import {
+  ALIAS_DICTIONARY,
+  hasNegativeMatch,
+  NEGATIVE_PATTERNS,
+} from "../src/shared/aliasDictionary";
 import type { FieldType } from "../src/shared/types";
 
 function patternsFor(fieldType: FieldType): string[] {
@@ -49,5 +53,23 @@ describe("ALIAS_DICTIONARY", () => {
     for (const fieldType of supportedTypes) {
       expect(ALIAS_DICTIONARY[fieldType]).not.toHaveLength(0);
     }
+  });
+});
+
+describe("NEGATIVE_PATTERNS", () => {
+  it("blocks 'Tên công ty' from matching FULL_NAME", () => {
+    expect(hasNegativeMatch("FULL_NAME", "Tên công ty")).toBe(true);
+  });
+
+  it("includes every documented FULL_NAME exclusion", () => {
+    expect(NEGATIVE_PATTERNS.FULL_NAME).toEqual(
+      expect.arrayContaining([
+        "ten cong ty",
+        "ten dang nhap",
+        "ten nguoi nhan",
+        "company name",
+        "username",
+      ]),
+    );
   });
 });
