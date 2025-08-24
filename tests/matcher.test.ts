@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { type AliasEntry } from "../src/shared/aliasDictionary";
-import { bestAliasMatch } from "../src/shared/matcher";
+import { bestAliasMatch, scoreField } from "../src/shared/matcher";
 
 describe("bestAliasMatch", () => {
   it("returns the weight of an exact alias", () => {
@@ -27,5 +27,17 @@ describe("bestAliasMatch", () => {
 
   it("returns undefined when no alias matches", () => {
     expect(bestAliasMatch("EMAIL", "tai khoan thanh toan")).toBeUndefined();
+  });
+});
+
+describe("scoreField", () => {
+  it("combines label, placeholder, and autocomplete into a capped confidence score", () => {
+    expect(
+      scoreField({
+        labelText: "Số điện thoại",
+        placeholder: "Nhập số điện thoại",
+        autocomplete: "tel",
+      }),
+    ).toEqual({ type: "PHONE", confidence: 100 });
   });
 });
