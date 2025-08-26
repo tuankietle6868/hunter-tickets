@@ -1,8 +1,11 @@
 import type { FieldSignals } from "../../shared/types";
-import type { QuestionBlock } from "./IFormAdapter";
+import { setNativeValue } from "../filler";
+import { verifyValue } from "../validator";
+import type { IFormAdapter, QuestionBlock } from "./IFormAdapter";
 
 const EDITABLE_CONTROL_SELECTOR =
   "input, textarea, select, [contenteditable='true']";
+const QUESTION_SELECTOR = "input:not([type='hidden']):not([type='submit']), textarea";
 
 function textContentOf(element: Element | null): string | undefined {
   const text = element?.textContent?.trim().replace(/\s+/g, " ");
@@ -18,7 +21,15 @@ function getControl(question: QuestionBlock): HTMLElement {
 }
 
 /** Extracts matching signals from standard HTML form controls and labels. */
-export class GenericHtmlAdapter {
+export class GenericHtmlAdapter implements IFormAdapter {
+  isApplicable(): boolean {
+    return document.querySelector(QUESTION_SELECTOR) !== null;
+  }
+
+  findQuestions(): QuestionBlock[] {
+    return Array.from(document.querySelectorAll<HTMLElement>(QUESTION_SELECTOR));
+  }
+
   /**
    * Reads a standard `label[for]` first, then a wrapping label. If neither is
    * available, the control's ARIA label, placeholder, name, or id is used as
@@ -51,5 +62,22 @@ export class GenericHtmlAdapter {
       inputType:
         control instanceof HTMLInputElement ? control.type : control.tagName.toLowerCase(),
     };
+  }
+
+  findInput(question: QuestionBlock): HTMLElement | null {
+    return getControl(question);
+  }
+
+  setValue(input: HTMLElement, value: string): void {
+    if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+      setNativeValue(input, value);
+    }
+  }
+
+  verifyValue(input: HTMLElement, expected: string): boolean {
+    return (
+      (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) &&
+      verifyValue(input, expected)
+    );
   }
 }
