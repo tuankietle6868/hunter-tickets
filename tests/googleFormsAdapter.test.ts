@@ -49,4 +49,19 @@ describe("GoogleFormsAdapter.findQuestions", () => {
       inputType: "textarea",
     });
   });
+
+  it("finds the native text control belonging to each supported question", () => {
+    document.body.innerHTML = readFileSync(FIXTURE_PATH, "utf8");
+    const adapter = new GoogleFormsAdapter();
+    const [shortAnswer, paragraph, radio] = adapter.findQuestions();
+
+    const shortAnswerInput = adapter.findInput(shortAnswer);
+    const paragraphInput = adapter.findInput(paragraph);
+
+    expect(shortAnswerInput).toBeInstanceOf(HTMLInputElement);
+    expect(shortAnswerInput?.closest('[role="listitem"]')).toBe(shortAnswer);
+    expect(paragraphInput).toBeInstanceOf(HTMLTextAreaElement);
+    expect(paragraphInput?.closest('[role="listitem"]')).toBe(paragraph);
+    expect(adapter.findInput(radio)).toBeNull();
+  });
 });
