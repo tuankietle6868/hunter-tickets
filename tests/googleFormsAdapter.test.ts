@@ -26,4 +26,27 @@ describe("GoogleFormsAdapter.findQuestions", () => {
       "radio",
     ]);
   });
+
+  it("uses the question heading as matching text and keeps help text separate", () => {
+    document.body.innerHTML = readFileSync(FIXTURE_PATH, "utf8");
+    const adapter = new GoogleFormsAdapter();
+    const [shortAnswer, paragraph] = adapter.findQuestions();
+
+    expect(adapter.getQuestionText(shortAnswer)).toMatchObject({
+      visibleQuestionText: "Họ và tên *",
+      labelText: "Họ và tên *",
+      ariaLabelledByText: "Họ và tên *",
+      surroundingText: "Nhập đúng như trên giấy tờ.",
+      inputType: "text",
+    });
+    expect(adapter.getQuestionText(shortAnswer).visibleQuestionText).not.toContain(
+      "Nhập đúng như trên giấy tờ.",
+    );
+
+    expect(adapter.getQuestionText(paragraph)).toMatchObject({
+      visibleQuestionText: "Địa chỉ liên hệ",
+      surroundingText: "Số nhà, đường, phường/xã, tỉnh/thành.",
+      inputType: "textarea",
+    });
+  });
 });
