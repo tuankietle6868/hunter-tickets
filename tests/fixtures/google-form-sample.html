@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sanitised Google Forms respondent DOM fixture</title>
+  </head>
+  <body>
+    <!--
+      Structural fixture for the published respondent view, surveyed 2026-08-24.
+      It preserves stable ARIA roles/relationships and omits volatile Google
+      classes, jscontroller attributes, live URLs, and all respondent data.
+    -->
+    <main role="main">
+      <div role="list" aria-label="Câu hỏi biểu mẫu">
+        <div role="listitem" data-question-kind="short-answer">
+          <div id="q-name-title" role="heading" aria-level="3">Họ và tên <span aria-label="Bắt buộc">*</span></div>
+          <div id="q-name-help">Nhập đúng như trên giấy tờ.</div>
+          <div>
+            <input
+              type="text"
+              aria-labelledby="q-name-title"
+              aria-describedby="q-name-help"
+              autocomplete="off"
+              required
+            />
+            <div aria-hidden="true">Câu trả lời của bạn</div>
+          </div>
+        </div>
+
+        <div role="listitem" data-question-kind="paragraph">
+          <div id="q-address-title" role="heading" aria-level="3">Địa chỉ liên hệ</div>
+          <div id="q-address-help">Số nhà, đường, phường/xã, tỉnh/thành.</div>
+          <div>
+            <textarea
+              aria-labelledby="q-address-title"
+              aria-describedby="q-address-help"
+              rows="1"
+            ></textarea>
+            <div aria-hidden="true">Câu trả lời của bạn</div>
+          </div>
+        </div>
+
+        <!-- Choice questions remain out of scope for free-text auto-fill. -->
+        <div role="listitem" data-question-kind="radio">
+          <div id="q-ticket-title" role="heading" aria-level="3">Loại vé</div>
+          <div role="radiogroup" aria-labelledby="q-ticket-title">
+            <div role="radio" aria-checked="false" tabindex="0">Vé thường</div>
+            <div role="radio" aria-checked="false" tabindex="-1">Vé ưu đãi</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

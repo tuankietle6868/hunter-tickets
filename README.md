@@ -275,6 +275,12 @@ export interface IFormAdapter {
 
 Google Forms render field bằng React nội bộ của Google, DOM không map 1-1 với `<label>` chuẩn. Cần:
 
+Baseline DOM survey và fixture đã được lưu tại
+[`docs/google-forms-dom.md`](docs/google-forms-dom.md) và
+[`tests/fixtures/google-form-sample.html`](tests/fixtures/google-form-sample.html).
+Adapter phải dùng selector theo ARIA trong tài liệu này, không dùng class CSS
+do Google sinh ra.
+
 - `findQuestions()`: duyệt các block `div[role="listitem"]`.
 - `getQuestionText()`: lấy text tiêu đề trong block (heading span), mô tả phụ nếu có.
 - `findInput()`: tuỳ loại câu hỏi — text ngắn (`input[type=text]`), đoạn văn (`textarea`), hoặc radio/dropdown (không autofill tự do, chỉ hỗ trợ text field trong bản đầu).
