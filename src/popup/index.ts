@@ -70,7 +70,8 @@ app.innerHTML = `
             ({ key, label, type, autocomplete, placeholder }) => `
               <label class="field" for="${key}">
                 <span>${label}</span>
-                <input id="${key}" name="${key}" type="${type}" autocomplete="${autocomplete ?? "off"}"${placeholder ? ` placeholder="${placeholder}"` : ""} />
+                <input id="${key}" name="${key}" type="${type}" autocomplete="${autocomplete ?? "off"}" aria-describedby="${key}-error"${placeholder ? ` placeholder="${placeholder}"` : ""} />
+                <span id="${key}-error" class="field-error" aria-live="polite"></span>
               </label>`,
           )
           .join("")}
@@ -101,6 +102,41 @@ function populateForm(profile: Profile) {
   }
 }
 
+function getValidationMessage(input: HTMLInputElement): string {
+  const value = input.value.trim();
+  if (!value) return "";
+
+  switch (input.name as keyof Profile) {
+    case "phone": {
+      const normalized = value.replace(/[.\s-]/g, "");
+      return /^(?:0|\+84)[35789]\d{8}$/.test(normalized)
+        ? ""
+        : "Số điện thoại phải là 10 số (ví dụ: 0901234567).";
+    }
+    case "email":
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Vui lòng nhập địa chỉ email hợp lệ.";
+    case "idNumber":
+      return /^\d{9}$|^\d{12}$/.test(value) ? "" : "CCCD phải gồm 9 hoặc 12 chữ số.";
+    case "dateOfBirth":
+      return value <= new Date().toISOString().slice(0, 10)
+        ? ""
+        : "Ngày sinh không thể ở tương lai.";
+    default:
+      return "";
+  }
+}
+
+function validateInput(input: HTMLInputElement): boolean {
+  const message = getValidationMessage(input);
+  const error = document.querySelector<HTMLElement>(`#${input.name}-error`);
+
+  input.setCustomValidity(message);
+  input.classList.toggle("has-error", Boolean(message));
+  input.setAttribute("aria-invalid", String(Boolean(message)));
+  if (error) error.textContent = message;
+  return !message;
+}
+
 async function loadProfile() {
   try {
     populateForm((await getProfile()) ?? {});
@@ -112,8 +148,12 @@ async function loadProfile() {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  if (!form.checkValidity()) {
-    form.reportValidity();
+  const invalidInputs = fields
+    .map(({ key }) => form.elements.namedItem(key) as HTMLInputElement)
+    .filter((input) => !validateInput(input));
+  if (invalidInputs.length > 0) {
+    invalidInputs[0].focus();
+    setStatus("Vui lòng kiểm tra lại các trường được đánh dấu.", "error");
     return;
   }
 
@@ -138,5 +178,13 @@ form.addEventListener("submit", async (event) => {
     saveButton.textContent = "Lưu hồ sơ";
   }
 });
+
+for (const { key } of fields) {
+  const input = form.elements.namedItem(key) as HTMLInputElement;
+  input.addEventListener("blur", () => validateInput(input));
+  input.addEventListener("input", () => {
+    if (input.classList.contains("has-error")) validateInput(input);
+  });
+}
 
 void loadProfile();

@@ -30,6 +30,25 @@ afterEach(() => {
 });
 
 describe("Profile popup", () => {
+  it("shows inline errors and does not save invalid phone or email values", async () => {
+    const items: Record<string, unknown> = {};
+    installStorage(items);
+    document.body.innerHTML = '<main id="app"></main>';
+
+    await import("../src/popup/index.ts?validation");
+    const form = document.querySelector<HTMLFormElement>("#profile-form");
+    (form!.elements.namedItem("phone") as HTMLInputElement).value = "12345";
+    (form!.elements.namedItem("email") as HTMLInputElement).value = "not-an-email";
+
+    form!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+    expect(document.querySelector("#phone-error")?.textContent).toContain(
+      "Số điện thoại phải là 10 số",
+    );
+    expect(document.querySelector("#email-error")?.textContent).toContain("địa chỉ email hợp lệ");
+    expect(items[PROFILE_STORAGE_KEY]).toBeUndefined();
+  });
+
   it("loads the saved profile after the popup is reopened", async () => {
     const items: Record<string, unknown> = {};
     installStorage(items);
