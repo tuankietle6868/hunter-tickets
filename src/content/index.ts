@@ -1,4 +1,5 @@
 import { getProfile } from "../shared/storage";
+import { GoogleFormsAdapter } from "./adapters/googleFormsAdapter";
 import { runGenericAutofill } from "./pipeline";
 
 async function runContentScript(): Promise<void> {
@@ -7,8 +8,12 @@ async function runContentScript(): Promise<void> {
     return;
   }
 
-  const results = await runGenericAutofill(profile);
-  console.log("[Smart Form Autofill] Generic fill results:", results);
+  const googleFormsAdapter = new GoogleFormsAdapter();
+  const results = await runGenericAutofill(
+    profile,
+    googleFormsAdapter.isApplicable() ? googleFormsAdapter : undefined,
+  );
+  console.log("[Smart Form Autofill] Fill results:", results);
 }
 
 void runContentScript();
