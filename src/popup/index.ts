@@ -1,4 +1,9 @@
-import { getProfile, setProfile } from "../shared/storage";
+import {
+  getProfile,
+  isOverlayAutoEnabled,
+  setOverlayAutoEnabled,
+  setProfile,
+} from "../shared/storage";
 import type { Profile } from "../shared/types";
 import "./popup.css";
 
@@ -47,6 +52,20 @@ const fields: Array<{
   },
 ];
 
+type TabsApi = {
+  query(queryInfo: { active: boolean; currentWindow: boolean }): Promise<Array<{ url?: string }>>;
+};
+
+function getActiveDomain(): Promise<string | undefined> {
+  const tabs = (globalThis as typeof globalThis & { chrome?: { tabs?: TabsApi } }).chrome?.tabs;
+  if (!tabs) return Promise.resolve(undefined);
+
+  return tabs
+    .query({ active: true, currentWindow: true })
+    .then(([tab]) => (tab?.url ? new URL(tab.url).hostname : undefined))
+    .catch(() => undefined);
+}
+
 const app = document.querySelector<HTMLElement>("#app");
 
 if (!app) {
@@ -79,14 +98,27 @@ app.innerHTML = `
       <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
       <button type="submit" class="save-button">Lưu hồ sơ</button>
     </form>
+    <section class="overlay-setting" aria-labelledby="overlay-setting-title">
+      <div>
+        <p id="overlay-setting-title">Overlay tự động</p>
+        <span id="overlay-domain">Đang xác định website...</span>
+      </div>
+      <label class="switch" for="auto-overlay">
+        <span class="sr-only">Bật overlay tự động cho website này</span>
+        <input id="auto-overlay" type="checkbox" role="switch" disabled />
+        <span class="switch-track" aria-hidden="true"></span>
+      </label>
+    </section>
   </section>
 `;
 
 const form = app.querySelector<HTMLFormElement>("#profile-form");
 const status = app.querySelector<HTMLParagraphElement>("#form-status");
 const saveButton = app.querySelector<HTMLButtonElement>(".save-button");
+const overlayToggle = app.querySelector<HTMLInputElement>("#auto-overlay");
+const overlayDomain = app.querySelector<HTMLElement>("#overlay-domain");
 
-if (!form || !status || !saveButton) {
+if (!form || !status || !saveButton || !overlayToggle || !overlayDomain) {
   throw new Error("Popup form could not be initialized");
 }
 
@@ -145,6 +177,35 @@ async function loadProfile() {
   }
 }
 
+async function loadOverlaySetting() {
+  const domain = await getActiveDomain();
+  if (!domain) {
+    overlayDomain.textContent = "Không thể xác định website hiện tại";
+    return;
+  }
+
+  try {
+    overlayToggle.checked = await isOverlayAutoEnabled(domain);
+    overlayToggle.disabled = false;
+    overlayDomain.textContent = domain;
+  } catch {
+    overlayDomain.textContent = "Không thể tải cài đặt cho website này";
+  }
+
+  overlayToggle.addEventListener("change", async () => {
+    const enabled = overlayToggle.checked;
+    overlayToggle.disabled = true;
+    try {
+      await setOverlayAutoEnabled(domain, enabled);
+    } catch {
+      overlayToggle.checked = !enabled;
+      setStatus("Không thể lưu cài đặt overlay. Vui lòng thử lại.", "error");
+    } finally {
+      overlayToggle.disabled = false;
+    }
+  });
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -188,3 +249,4 @@ for (const { key } of fields) {
 }
 
 void loadProfile();
+void loadOverlaySetting();

@@ -1,14 +1,13 @@
-import { getProfile } from "../shared/storage";
-import {
-  getGoogleFormsAdapterOrShowFallback,
-  isGoogleFormsPage,
-} from "./googleFormsFallback";
+import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
+import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
 import { runGenericAutofill } from "./pipeline";
 
 async function runContentScript(): Promise<void> {
+  // Read the per-domain preference before creating any automatic overlay UI.
+  const overlayAutoEnabled = await isOverlayAutoEnabled(window.location.hostname);
   const onGoogleFormsPage = isGoogleFormsPage();
   const googleFormsAdapter = onGoogleFormsPage
-    ? getGoogleFormsAdapterOrShowFallback()
+    ? getGoogleFormsAdapterOrShowFallback(overlayAutoEnabled)
     : undefined;
 
   if (onGoogleFormsPage && !googleFormsAdapter) {
@@ -20,10 +19,7 @@ async function runContentScript(): Promise<void> {
     return;
   }
 
-  const results = await runGenericAutofill(
-    profile,
-    googleFormsAdapter,
-  );
+  const results = await runGenericAutofill(profile, googleFormsAdapter);
   console.log("[Smart Form Autofill] Fill results:", results);
 }
 

@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getProfile, PROFILE_STORAGE_KEY, setProfile } from "../src/shared/storage";
+import {
+  getProfile,
+  isOverlayAutoEnabled,
+  OVERLAY_SETTINGS_STORAGE_KEY,
+  PROFILE_STORAGE_KEY,
+  setOverlayAutoEnabled,
+  setProfile,
+} from "../src/shared/storage";
 import type { Profile } from "../src/shared/types";
 
 type ChromeGlobal = typeof globalThis & { chrome?: unknown };
@@ -38,5 +45,28 @@ describe("Profile storage", () => {
     await expect(getProfile()).resolves.toEqual(profile);
     expect(set).toHaveBeenCalledWith({ [PROFILE_STORAGE_KEY]: profile });
     expect(get).toHaveBeenCalledWith(PROFILE_STORAGE_KEY);
+  });
+
+  it("stores the automatic-overlay preference per domain", async () => {
+    const items: Record<string, unknown> = {};
+    Object.defineProperty(globalThis, "chrome", {
+      configurable: true,
+      value: {
+        storage: {
+          local: {
+            get: async (key: string) => ({ [key]: items[key] }),
+            set: async (values: Record<string, unknown>) => Object.assign(items, values),
+          },
+        },
+      },
+    });
+
+    await setOverlayAutoEnabled("docs.google.com", false);
+
+    await expect(isOverlayAutoEnabled("docs.google.com")).resolves.toBe(false);
+    await expect(isOverlayAutoEnabled("example.com")).resolves.toBe(true);
+    expect(items[OVERLAY_SETTINGS_STORAGE_KEY]).toEqual({
+      autoEnabledByDomain: { "docs.google.com": false },
+    });
   });
 });
