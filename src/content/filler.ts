@@ -21,6 +21,14 @@ function getNativeValueSetter(element: EditableElement): (value: string) => void
 export function setNativeValue(element: EditableElement, value: string): void {
   getNativeValueSetter(element)(value);
 
-  element.dispatchEvent(new Event("input", { bubbles: true }));
+  // Google Forms listens to the same bubbling InputEvent that a real text
+  // edit emits before reconciling its React-controlled value.
+  element.dispatchEvent(
+    new InputEvent("input", {
+      bubbles: true,
+      data: value,
+      inputType: "insertText",
+    }),
+  );
   element.dispatchEvent(new Event("change", { bubbles: true }));
 }

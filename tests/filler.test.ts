@@ -7,10 +7,14 @@ describe("setNativeValue", () => {
     document.body.replaceChildren();
   });
 
-  it("sets a regular input value and dispatches input then change", () => {
+  it("sets a regular input value and dispatches InputEvent then change", () => {
     const input = document.createElement("input");
     const receivedEvents: string[] = [];
-    input.addEventListener("input", () => receivedEvents.push("input"));
+    let inputEvent: Event | undefined;
+    input.addEventListener("input", (event) => {
+      inputEvent = event;
+      receivedEvents.push("input");
+    });
     input.addEventListener("change", () => receivedEvents.push("change"));
     document.body.append(input);
 
@@ -18,6 +22,7 @@ describe("setNativeValue", () => {
 
     expect(input.value).toBe("Nguyễn Văn A");
     expect(receivedEvents).toEqual(["input", "change"]);
+    expect(inputEvent).toBeInstanceOf(InputEvent);
   });
 
   it("bypasses a React-like instance setter while updating the native value", () => {
