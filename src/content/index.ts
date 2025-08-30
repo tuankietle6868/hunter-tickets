@@ -7,7 +7,7 @@ async function runContentScript(): Promise<void> {
     return;
   }
 
-  const results = runGenericAutofill(profile);
+  const results = await runGenericAutofill(profile);
   console.log("[Smart Form Autofill] Generic fill results:", results);
 }
 

@@ -21,15 +21,15 @@ function getProfileValue(profile: Profile, fieldType: FieldType): string | undef
 }
 
 /** Runs the generic SCAN → MATCH → FILL → VERIFY workflow for this document. */
-export function runGenericAutofill(
+export async function runGenericAutofill(
   profile: Profile,
   adapter = new GenericHtmlAdapter(),
-): DetectedField[] {
+): Promise<DetectedField[]> {
   if (!adapter.isApplicable()) {
     return [];
   }
 
-  return adapter.findQuestions().map((question) => {
+  return Promise.all(adapter.findQuestions().map(async (question) => {
     const input = adapter.findInput(question);
     const signals = adapter.getQuestionText(question);
     const match = scoreField(signals);
@@ -48,9 +48,9 @@ export function runGenericAutofill(
     }
 
     adapter.setValue(input, value);
-    detectedField.status = adapter.verifyValue(input, value)
+    detectedField.status = (await adapter.verifyValue(input, value))
       ? "filled"
       : "verify_failed";
     return detectedField;
-  });
+  }));
 }

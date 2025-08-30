@@ -23,6 +23,18 @@ function resolveIdReferences(input: HTMLElement, attribute: string): string | un
   return text || undefined;
 }
 
+function afterNextAnimationFrame(ownerDocument: Document): Promise<void> {
+  const view = ownerDocument.defaultView;
+
+  if (!view) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    view.requestAnimationFrame(() => resolve());
+  });
+}
+
 /**
  * Reads the published Google Forms respondent DOM using stable ARIA roles.
  * Generated CSS classes and Google `js*` attributes are intentionally ignored.
@@ -73,7 +85,11 @@ export class GoogleFormsAdapter implements IFormAdapter {
     }
   }
 
-  verifyValue(input: HTMLElement, expected: string): boolean {
+  async verifyValue(input: HTMLElement, expected: string): Promise<boolean> {
+    // Forms may commit the input event and replace its React-controlled node
+    // in the following frame. Check only after that reconciliation point.
+    await afterNextAnimationFrame(input.ownerDocument);
+
     return (
       (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) &&
       verifyValue(input, expected)

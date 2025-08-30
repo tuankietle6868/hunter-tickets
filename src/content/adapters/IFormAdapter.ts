@@ -28,6 +28,9 @@ export interface IFormAdapter {
   /** Write a value to an editable control. */
   setValue(input: HTMLElement, value: string): void;
 
-  /** Confirm that an editable control still contains the expected value. */
-  verifyValue(input: HTMLElement, expected: string): boolean;
+  /**
+   * Confirm that an editable control still contains the expected value.
+   * Adapters for controlled frameworks may wait for their next render.
+   */
+  verifyValue(input: HTMLElement, expected: string): boolean | Promise<boolean>;
 }

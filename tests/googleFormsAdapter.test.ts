@@ -87,6 +87,19 @@ describe("GoogleFormsAdapter.findQuestions", () => {
 
     expect(receivedInputEvent).toBeInstanceOf(InputEvent);
     expect(input.value).toBe("Nguyễn Văn A");
-    expect(adapter.verifyValue(input, "Nguyễn Văn A")).toBe(true);
+    expect(await adapter.verifyValue(input, "Nguyễn Văn A")).toBe(true);
+  });
+
+  it("waits for the next frame before reporting a Forms-controlled value", async () => {
+    document.body.innerHTML = readFileSync(FIXTURE_PATH, "utf8");
+    const adapter = new GoogleFormsAdapter();
+    const input = adapter.findInput(adapter.findQuestions()[0]) as HTMLInputElement;
+
+    input.value = "Nguyễn Văn A";
+    requestAnimationFrame(() => {
+      input.value = "";
+    });
+
+    expect(await adapter.verifyValue(input, "Nguyễn Văn A")).toBe(false);
   });
 });

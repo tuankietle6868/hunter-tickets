@@ -7,7 +7,7 @@ describe("generic autofill pipeline", () => {
     document.body.replaceChildren();
   });
 
-  it("scans, matches, fills, and verifies a standard HTML form", () => {
+  it("scans, matches, fills, and verifies a standard HTML form", async () => {
     document.body.innerHTML = `
       <form>
         <label for="full-name">Họ và tên</label>
@@ -18,7 +18,7 @@ describe("generic autofill pipeline", () => {
       </form>
     `;
 
-    const results = runGenericAutofill({
+    const results = await runGenericAutofill({
       fullName: "Nguyễn Văn An",
       email: "an@example.com",
     });
