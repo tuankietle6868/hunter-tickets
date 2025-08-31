@@ -1,5 +1,6 @@
 import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
 import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
+import { showAutofillOverlay } from "./overlayUI";
 import { runGenericAutofill } from "./pipeline";
 
 async function runContentScript(): Promise<void> {
@@ -20,6 +21,7 @@ async function runContentScript(): Promise<void> {
   }
 
   const results = await runGenericAutofill(profile, googleFormsAdapter);
+  if (overlayAutoEnabled) showAutofillOverlay(results);
   console.log("[Smart Form Autofill] Fill results:", results);
 }
 

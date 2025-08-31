@@ -26,8 +26,8 @@ describe("Google Forms unsupported-DOM fallback", () => {
 
     const overlay = document.getElementById(UNSUPPORTED_GOOGLE_FORM_OVERLAY_ID);
     expect(overlay).not.toBeNull();
-    expect(overlay?.textContent).toContain("Không nhận diện được cấu trúc Google Forms này");
-    expect(overlay?.getAttribute("role")).toBe("alert");
+    expect(overlay?.shadowRoot?.textContent).toContain("Không nhận diện được Google Forms");
+    expect(overlay?.shadowRoot?.querySelector("section")?.getAttribute("role")).toBe("status");
     expect(document.querySelectorAll(`#${UNSUPPORTED_GOOGLE_FORM_OVERLAY_ID}`)).toHaveLength(1);
   });
 
