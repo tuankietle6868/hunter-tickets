@@ -30,6 +30,14 @@ describe("Autofill overlay", () => {
     expect(document.querySelectorAll(`#${OVERLAY_HOST_ID}`)).toHaveLength(1);
   });
 
+  it("reminds the user to submit the original form and has no submit action", () => {
+    showAutofillOverlay([]);
+
+    const shadow = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot;
+    expect(shadow?.textContent).toContain("Hãy tự kiểm tra và bấm Submit gốc của form.");
+    expect(shadow?.querySelectorAll('button[type="submit"]')).toHaveLength(0);
+  });
+
   it("lists each scanned field with a clear match status", () => {
     const results = [
       {

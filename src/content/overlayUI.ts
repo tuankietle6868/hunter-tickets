@@ -91,6 +91,7 @@ function renderOverlay(
       .field-status { flex: 0 0 auto; color: #788397; font-size: 11px; font-weight: 650; }
       .field-status.is-matched { color: #148044; }
       .field-status.is-review { color: #b35c08; }
+      .safety-notice { margin: 10px 0 0; padding: 8px 9px; border-radius: 6px; color: #596579; background: #f6f8fc; font-size: 11px; font-weight: 600; }
       .actions { display: flex; gap: 8px; margin-top: 12px; }
       .action-button { min-height: 30px; padding: 0 10px; border: 1px solid #cfd7e5; border-radius: 6px; color: #344158; background: #fff; cursor: pointer; font: 700 11px/1 Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: .03em; }
       .action-button:hover, .action-button:focus-visible { border-color: #2867dc; color: #1f58c4; background: #f2f6ff; outline: none; }
@@ -105,6 +106,7 @@ function renderOverlay(
       <h2>${title}</h2>
       <p class="message">${message}</p>
       ${content}
+      <p class="safety-notice">Hãy tự kiểm tra và bấm Submit gốc của form.</p>
       ${
         actions
           ? `<div class="actions"><button class="action-button" type="button" data-overlay-action="rescan">SCAN LẠI</button><button class="action-button is-primary" type="button" data-overlay-action="refill">ĐIỀN LẠI</button></div>`
