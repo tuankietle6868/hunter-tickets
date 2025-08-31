@@ -1,8 +1,4 @@
-import {
-  ALIAS_DICTIONARY,
-  hasNegativeMatch,
-  type AliasEntry,
-} from "./aliasDictionary";
+import { ALIAS_DICTIONARY, hasNegativeMatch, type AliasEntry } from "./aliasDictionary";
 import { mapAutocompleteToFieldType } from "./autocomplete";
 import { cleanQuestionText, normalize, stripDiacritics } from "./normalizer";
 import type { FieldSignals, FieldType } from "./types";
@@ -26,6 +22,7 @@ const SCORABLE_FIELD_TYPES: FieldType[] = [
   "EMAIL",
   "DATE_OF_BIRTH",
   "ADDRESS",
+  "GENDER",
 ];
 
 function matchesAlias(value: string, alias: AliasEntry): boolean {
@@ -72,6 +69,7 @@ export function scoreField(signals: FieldSignals): {
     EMAIL: 0,
     DATE_OF_BIRTH: 0,
     ADDRESS: 0,
+    GENDER: 0,
     UNKNOWN: 0,
   };
 

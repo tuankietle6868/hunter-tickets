@@ -76,6 +76,12 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
     exact("birthday", 85),
     contains("ngay sinh nhat", 85),
   ],
+  GENDER: [
+    exact("gioi tinh", 100),
+    exact("gender", 100),
+    exact("sex", 100),
+    contains("gioi tinh cua ban", 100),
+  ],
   ADDRESS: [
     contains("dia chi", 100),
     contains("address", 90),
@@ -106,6 +112,7 @@ export const NEGATIVE_PATTERNS: Record<FieldType, string[]> = {
   ID_NUMBER: ["ma so thue", "ma sinh vien", "ma don hang", "so ho chieu"],
   EMAIL: ["email nguoi nhan", "email cong ty", "email dang nhap"],
   DATE_OF_BIRTH: ["ngay cap", "ngay het han", "ngay dang ky"],
+  GENDER: [],
   ADDRESS: ["dia chi giao hang", "dia chi nhan hang", "dia chi cong ty"],
   UNKNOWN: [],
 };

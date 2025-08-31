@@ -6,7 +6,8 @@ import type { IFormAdapter, QuestionBlock } from "./IFormAdapter";
 const QUESTION_SELECTOR = '[role="list"] > [role="listitem"]';
 const QUESTION_HEADING_SELECTOR = '[role="heading"]';
 const SUPPORTED_CONTROL_SELECTOR =
-  'input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input:not([type]), textarea';
+  'input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="date"], input:not([type]), textarea';
+const RADIO_SELECTOR = '[role="radio"]';
 
 function normalizeText(element: Element | null): string | undefined {
   const text = element?.textContent?.trim().replace(/\s+/g, " ");
@@ -21,6 +22,39 @@ function resolveIdReferences(input: HTMLElement, attribute: string): string | un
     .join(" ");
 
   return text || undefined;
+}
+
+function normalizeOption(value: string): string {
+  return value
+    .toLocaleLowerCase("vi")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/đ/g, "d")
+    .trim();
+}
+
+function genderKind(value: string): "male" | "female" | "other" | undefined {
+  const normalized = normalizeOption(value);
+  if (/(^|\s)(nam|male|m)(\s|$)/.test(normalized)) return "male";
+  if (/(^|\s)(nu|female|f)(\s|$)/.test(normalized)) return "female";
+  if (/(khac|other|nonbinary|non-binary)/.test(normalized)) return "other";
+  return undefined;
+}
+
+function isMatchingRadioOption(option: HTMLElement, value: string): boolean {
+  const optionText = [option.getAttribute("aria-label"), normalizeText(option)]
+    .filter((text): text is string => Boolean(text))
+    .join(" ");
+  const wantedKind = genderKind(value);
+  return wantedKind
+    ? genderKind(optionText) === wantedKind
+    : normalizeOption(optionText) === normalizeOption(value);
+}
+
+function radioOptions(input: HTMLElement): HTMLElement[] {
+  return Array.from(
+    input.closest(QUESTION_SELECTOR)?.querySelectorAll<HTMLElement>(RADIO_SELECTOR) ?? [],
+  );
 }
 
 function afterNextAnimationFrame(ownerDocument: Document): Promise<void> {
@@ -56,9 +90,7 @@ export class GoogleFormsAdapter implements IFormAdapter {
   getQuestionText(question: QuestionBlock): FieldSignals {
     const input = this.findInput(question);
     const headingText = normalizeText(question.querySelector(QUESTION_HEADING_SELECTOR));
-    const ariaLabelledByText = input
-      ? resolveIdReferences(input, "aria-labelledby")
-      : undefined;
+    const ariaLabelledByText = input ? resolveIdReferences(input, "aria-labelledby") : undefined;
 
     return {
       visibleQuestionText: headingText ?? ariaLabelledByText,
@@ -71,15 +103,26 @@ export class GoogleFormsAdapter implements IFormAdapter {
       autocomplete: input?.getAttribute("autocomplete") ?? undefined,
       surroundingText: input ? resolveIdReferences(input, "aria-describedby") : undefined,
       inputType:
-        input instanceof HTMLInputElement ? input.type : input ? "textarea" : undefined,
+        input instanceof HTMLInputElement
+          ? input.type
+          : (input?.getAttribute("role") ?? (input ? "textarea" : undefined)),
     };
   }
 
   findInput(question: QuestionBlock): HTMLElement | null {
-    return question.querySelector<HTMLElement>(SUPPORTED_CONTROL_SELECTOR);
+    return (
+      question.querySelector<HTMLElement>(SUPPORTED_CONTROL_SELECTOR) ??
+      question.querySelector<HTMLElement>(RADIO_SELECTOR)
+    );
   }
 
   setValue(input: HTMLElement, value: string): void {
+    if (input.getAttribute("role") === "radio") {
+      radioOptions(input)
+        .find((option) => isMatchingRadioOption(option, value))
+        ?.click();
+      return;
+    }
     if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
       setNativeValue(input, value);
     }
@@ -89,6 +132,13 @@ export class GoogleFormsAdapter implements IFormAdapter {
     // Forms may commit the input event and replace its React-controlled node
     // in the following frame. Check only after that reconciliation point.
     await afterNextAnimationFrame(input.ownerDocument);
+
+    if (input.getAttribute("role") === "radio") {
+      return radioOptions(input).some(
+        (option) =>
+          option.getAttribute("aria-checked") === "true" && isMatchingRadioOption(option, expected),
+      );
+    }
 
     return (
       (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) &&

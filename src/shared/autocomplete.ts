@@ -10,6 +10,7 @@ export const AUTOCOMPLETE_FIELD_TYPE_MAP: Readonly<Record<string, FieldType>> = 
   "tel-local": "PHONE",
   email: "EMAIL",
   bday: "DATE_OF_BIRTH",
+  sex: "GENDER",
   "street-address": "ADDRESS",
   "address-line1": "ADDRESS",
 };

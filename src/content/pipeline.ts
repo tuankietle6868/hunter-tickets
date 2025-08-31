@@ -1,6 +1,8 @@
 import { scoreField } from "../shared/matcher";
 import type { DetectedField, FieldType, Profile } from "../shared/types";
 import { GenericHtmlAdapter } from "./adapters/genericHtmlAdapter";
+import { classifyControl } from "./controlType";
+import { formatValueForInput } from "./dateValue";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -12,6 +14,7 @@ const PROFILE_KEY_BY_FIELD_TYPE: Partial<Record<FieldType, keyof Profile>> = {
   EMAIL: "email",
   DATE_OF_BIRTH: "dateOfBirth",
   ADDRESS: "address",
+  GENDER: "gender",
 };
 
 function getProfileValue(profile: Profile, fieldType: FieldType): string | undefined {
@@ -29,28 +32,32 @@ export async function runGenericAutofill(
     return [];
   }
 
-  return Promise.all(adapter.findQuestions().map(async (question) => {
-    const input = adapter.findInput(question);
-    const signals = adapter.getQuestionText(question);
-    const match = scoreField(signals);
-    const detectedField: DetectedField = {
-      elementRef: new WeakRef(input ?? question),
-      signals,
-      candidateType: match.type,
-      confidence: match.confidence,
-      status: "pending",
-    };
-    const value = getProfileValue(profile, match.type);
+  return Promise.all(
+    adapter.findQuestions().map(async (question) => {
+      const input = adapter.findInput(question);
+      const signals = adapter.getQuestionText(question);
+      const match = scoreField(signals);
+      const detectedField: DetectedField = {
+        elementRef: new WeakRef(input ?? question),
+        controlType: classifyControl(input ?? question),
+        signals,
+        candidateType: match.type,
+        confidence: match.confidence,
+        status: "pending",
+      };
+      const value = getProfileValue(profile, match.type);
 
-    if (!input || match.confidence < AUTO_FILL_CONFIDENCE || !value) {
-      detectedField.status = "skipped";
+      if (!input || match.confidence < AUTO_FILL_CONFIDENCE || !value) {
+        detectedField.status = "skipped";
+        return detectedField;
+      }
+
+      const formattedValue = formatValueForInput(value, match.type, input);
+      adapter.setValue(input, formattedValue);
+      detectedField.status = (await adapter.verifyValue(input, formattedValue))
+        ? "filled"
+        : "verify_failed";
       return detectedField;
-    }
-
-    adapter.setValue(input, value);
-    detectedField.status = (await adapter.verifyValue(input, value))
-      ? "filled"
-      : "verify_failed";
-    return detectedField;
-  }));
+    }),
+  );
 }

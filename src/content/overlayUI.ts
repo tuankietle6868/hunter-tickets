@@ -28,6 +28,7 @@ const FIELD_LABELS: Record<FieldType, string> = {
   EMAIL: "Email",
   DATE_OF_BIRTH: "Ngày sinh",
   ADDRESS: "Địa chỉ",
+  GENDER: "Giới tính",
   UNKNOWN: "Trường chưa nhận diện",
 };
 

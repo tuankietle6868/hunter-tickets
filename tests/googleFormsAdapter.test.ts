@@ -4,10 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { GoogleFormsAdapter } from "../src/content/adapters/googleFormsAdapter";
 
-const FIXTURE_PATH = resolve(
-  process.cwd(),
-  "tests/fixtures/google-form-sample.html",
-);
+const FIXTURE_PATH = resolve(process.cwd(), "tests/fixtures/google-form-sample.html");
 
 describe("GoogleFormsAdapter.findQuestions", () => {
   afterEach(() => {
@@ -50,7 +47,7 @@ describe("GoogleFormsAdapter.findQuestions", () => {
     });
   });
 
-  it("finds the native text control belonging to each supported question", () => {
+  it("finds the supported control belonging to each question", () => {
     document.body.innerHTML = readFileSync(FIXTURE_PATH, "utf8");
     const adapter = new GoogleFormsAdapter();
     const [shortAnswer, paragraph, radio] = adapter.findQuestions();
@@ -62,7 +59,7 @@ describe("GoogleFormsAdapter.findQuestions", () => {
     expect(shortAnswerInput?.closest('[role="listitem"]')).toBe(shortAnswer);
     expect(paragraphInput).toBeInstanceOf(HTMLTextAreaElement);
     expect(paragraphInput?.closest('[role="listitem"]')).toBe(paragraph);
-    expect(adapter.findInput(radio)).toBeNull();
+    expect(adapter.findInput(radio)?.getAttribute("role")).toBe("radio");
   });
 
   it("notifies a Forms-like controlled input so its value survives a render", async () => {
@@ -101,5 +98,27 @@ describe("GoogleFormsAdapter.findQuestions", () => {
     });
 
     expect(await adapter.verifyValue(input, "Nguyễn Văn A")).toBe(false);
+  });
+
+  it("selects a gender radio option using its ARIA label", async () => {
+    document.body.innerHTML = `
+      <div role="list"><section role="listitem"><h3 role="heading">Giới tính</h3>
+        <div role="radio" aria-label="Nam" aria-checked="false"></div>
+        <div role="radio" aria-label="Nữ" aria-checked="false"></div>
+      </section></div>
+    `;
+    const adapter = new GoogleFormsAdapter();
+    const firstOption = adapter.findInput(adapter.findQuestions()[0])!;
+    const femaleOption = document.querySelector<HTMLElement>('[aria-label="Nữ"]')!;
+    femaleOption.addEventListener("click", () => {
+      document.querySelectorAll('[role="radio"]').forEach((option) => {
+        option.setAttribute("aria-checked", String(option === femaleOption));
+      });
+    });
+
+    adapter.setValue(firstOption, "Nữ");
+
+    expect(femaleOption.getAttribute("aria-checked")).toBe("true");
+    expect(await adapter.verifyValue(firstOption, "Nữ")).toBe(true);
   });
 });

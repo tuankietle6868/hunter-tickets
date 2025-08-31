@@ -50,6 +50,13 @@ const fields: Array<{
     autocomplete: "street-address",
     placeholder: "Số nhà, đường, phường/xã...",
   },
+  {
+    key: "gender",
+    label: "Giới tính",
+    type: "text",
+    autocomplete: "sex",
+    placeholder: "Nam, Nữ hoặc Khác",
+  },
 ];
 
 type TabsApi = {

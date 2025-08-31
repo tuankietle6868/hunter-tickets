@@ -24,6 +24,29 @@
           <label for="address">4. Địa chỉ liên hệ</label>
           <textarea id="address" name="address"></textarea>
         </p>
+        <p>
+          <label for="date-of-birth">5. Ngày tháng năm sinh</label>
+          <input id="date-of-birth" name="dateOfBirth" type="date" />
+        </p>
+        <p>
+          <label for="date-of-birth-text">6. Ngày sinh (dạng text)</label>
+          <input
+            id="date-of-birth-text"
+            name="birthDateText"
+            type="text"
+            placeholder="dd/mm/yyyy"
+          />
+        </p>
+        <p>
+          <label for="gender-text">7. Giới tính (dạng text)</label>
+          <input id="gender-text" name="genderText" type="text" />
+        </p>
+        <fieldset>
+          <legend>8. Giới tính (radio)</legend>
+          <label><input type="radio" name="gender" value="male" /> Nam</label>
+          <label><input type="radio" name="gender" value="female" /> Nữ</label>
+          <label><input type="radio" name="gender" value="other" /> Khác</label>
+        </fieldset>
       </form>
     </main>
   </body>
