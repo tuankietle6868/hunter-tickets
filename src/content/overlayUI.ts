@@ -16,6 +16,9 @@ interface OverlayOptions {
 export interface OverlayActions {
   onRescan: () => void | Promise<void>;
   onRefill: () => void | Promise<void>;
+  onFieldSelect?: (field: DetectedField) => void;
+  /** Internal field references used by the rendered result rows. */
+  fields?: DetectedField[];
 }
 
 const FIELD_LABELS: Record<FieldType, string> = {
@@ -46,7 +49,7 @@ function getFieldName(field: DetectedField): string {
   );
 }
 
-function renderFieldRow(field: DetectedField): string {
+function renderFieldRow(field: DetectedField, index: number, selectable: boolean): string {
   const confidence = Math.max(0, Math.min(100, Math.round(field.confidence)));
   const matched = field.status === "filled";
   const status = matched
@@ -54,7 +57,7 @@ function renderFieldRow(field: DetectedField): string {
     : field.status === "verify_failed"
       ? `<span class="field-status is-review">! Check ${confidence}%</span>`
       : `<span class="field-status">○ Not found</span>`;
-  return `<li class="field-row"><span class="field-name">${escapeHtml(getFieldName(field))}</span>${status}</li>`;
+  return `<li class="field-row${selectable ? " is-selectable" : ""}"${selectable ? ` data-field-index="${index}" role="button" tabindex="0" aria-label="Đi tới trường ${escapeHtml(getFieldName(field))}"` : ""}><span class="field-name">${escapeHtml(getFieldName(field))}</span>${status}</li>`;
 }
 
 function renderOverlay(
@@ -82,6 +85,8 @@ function renderOverlay(
       .message { margin: 5px 0 0; color: #596579; font-size: 12px; }
       .field-list { display: grid; gap: 6px; max-height: 180px; margin: 12px 0 0; padding: 0; overflow: auto; list-style: none; }
       .field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 9px; border-radius: 6px; background: #f6f8fc; font-size: 12px; }
+      .field-row.is-selectable { cursor: pointer; }
+      .field-row.is-selectable:hover, .field-row.is-selectable:focus-visible { background: #eaf1ff; outline: 2px solid #8aafe9; outline-offset: 1px; }
       .field-name { overflow: hidden; color: #344158; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
       .field-status { flex: 0 0 auto; color: #788397; font-size: 11px; font-weight: 650; }
       .field-status.is-matched { color: #148044; }
@@ -124,6 +129,23 @@ function renderOverlay(
     shadow
       .querySelector<HTMLButtonElement>('[data-overlay-action="refill"]')
       ?.addEventListener("click", () => runAction(actions.onRefill));
+
+    if (actions.onFieldSelect) {
+      const selectField = (index: number) => {
+        const field = actions.fields?.[index];
+        if (field) actions.onFieldSelect?.(field);
+      };
+      shadow.querySelectorAll<HTMLElement>("[data-field-index]").forEach((row) => {
+        const index = Number(row.dataset.fieldIndex);
+        row.addEventListener("click", () => selectField(index));
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectField(index);
+          }
+        });
+      });
+    }
   }
   (ownerDocument.body ?? ownerDocument.documentElement).append(host);
 }
@@ -140,9 +162,41 @@ export function showAutofillOverlay(
     ? `Đã điền ${filled} trường. Có ${needsReview} trường cần kiểm tra lại.`
     : `Đã điền ${filled} trường. Hãy kiểm tra thông tin trước khi gửi form.`;
   const content = results.length
-    ? `<ul class="field-list" aria-label="Kết quả nhận diện field">${results.map(renderFieldRow).join("")}</ul>`
+    ? `<ul class="field-list" aria-label="Kết quả nhận diện field">${results.map((field, index) => renderFieldRow(field, index, Boolean(actions?.onFieldSelect))).join("")}</ul>`
     : "";
-  renderOverlay({ title: "Đã hoàn tất điền form", message, content, actions }, ownerDocument);
+  renderOverlay(
+    {
+      title: "Đã hoàn tất điền form",
+      message,
+      content,
+      actions: actions ? { ...actions, fields: results } : undefined,
+    },
+    ownerDocument,
+  );
+}
+
+/** Scrolls to the scanned input and applies a short, high-priority highlight. */
+export function scrollToAndHighlightField(field: DetectedField): void {
+  const element = field.elementRef.deref();
+  if (!element) return;
+
+  element.scrollIntoView?.({ behavior: "smooth", block: "center" });
+  element.focus?.({ preventScroll: true });
+
+  const outline = element.style.getPropertyValue("outline");
+  const outlinePriority = element.style.getPropertyPriority("outline");
+  const outlineOffset = element.style.getPropertyValue("outline-offset");
+  const outlineOffsetPriority = element.style.getPropertyPriority("outline-offset");
+  element.style.setProperty("outline", "3px solid #2563eb", "important");
+  element.style.setProperty("outline-offset", "3px", "important");
+
+  window.setTimeout(() => {
+    if (outline) element.style.setProperty("outline", outline, outlinePriority);
+    else element.style.removeProperty("outline");
+    if (outlineOffset)
+      element.style.setProperty("outline-offset", outlineOffset, outlineOffsetPriority);
+    else element.style.removeProperty("outline-offset");
+  }, 2000);
 }
 
 /** Shows a scoped warning without allowing page styles to affect its contents. */

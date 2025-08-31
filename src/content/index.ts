@@ -1,6 +1,6 @@
 import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
 import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
-import { showAutofillOverlay } from "./overlayUI";
+import { scrollToAndHighlightField, showAutofillOverlay } from "./overlayUI";
 import { runGenericAutofill } from "./pipeline";
 
 async function runContentScript(): Promise<void> {
@@ -25,6 +25,7 @@ async function runContentScript(): Promise<void> {
     showAutofillOverlay(results, document, {
       onRescan: runContentScript,
       onRefill: runContentScript,
+      onFieldSelect: scrollToAndHighlightField,
     });
   }
   console.log("[Smart Form Autofill] Fill results:", results);

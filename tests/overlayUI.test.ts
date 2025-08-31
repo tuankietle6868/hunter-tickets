@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { OVERLAY_HOST_ID, OVERLAY_PANEL_ID, showAutofillOverlay } from "../src/content/overlayUI";
+import {
+  OVERLAY_HOST_ID,
+  OVERLAY_PANEL_ID,
+  scrollToAndHighlightField,
+  showAutofillOverlay,
+} from "../src/content/overlayUI";
 import type { DetectedField } from "../src/shared/types";
 
 describe("Autofill overlay", () => {
@@ -64,5 +69,33 @@ describe("Autofill overlay", () => {
 
     expect(onRescan).toHaveBeenCalledOnce();
     expect(onRefill).toHaveBeenCalledOnce();
+  });
+
+  it("scrolls to and highlights the corresponding input when a field row is clicked", () => {
+    const input = document.createElement("input");
+    const scrollIntoView = vi.fn();
+    input.scrollIntoView = scrollIntoView;
+    document.body.append(input);
+    const emailField = {
+      elementRef: new WeakRef(input),
+      candidateType: "EMAIL",
+      confidence: 98,
+      signals: { labelText: "Email" },
+      status: "filled",
+    } as DetectedField;
+
+    showAutofillOverlay([emailField], document, {
+      onRescan: vi.fn(),
+      onRefill: vi.fn(),
+      onFieldSelect: scrollToAndHighlightField,
+    });
+
+    const row = document
+      .getElementById(OVERLAY_HOST_ID)
+      ?.shadowRoot?.querySelector<HTMLElement>('[data-field-index="0"]');
+    row?.click();
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+    expect(input.style.outline).toBe("3px solid #2563eb");
   });
 });
