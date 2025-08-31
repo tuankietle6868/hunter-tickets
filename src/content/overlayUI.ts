@@ -10,6 +10,12 @@ interface OverlayOptions {
   message: string;
   variant?: OverlayVariant;
   content?: string;
+  actions?: OverlayActions;
+}
+
+export interface OverlayActions {
+  onRescan: () => void | Promise<void>;
+  onRefill: () => void | Promise<void>;
 }
 
 const FIELD_LABELS: Record<FieldType, string> = {
@@ -52,7 +58,7 @@ function renderFieldRow(field: DetectedField): string {
 }
 
 function renderOverlay(
-  { title, message, variant = "info", content = "" }: OverlayOptions,
+  { title, message, variant = "info", content = "", actions }: OverlayOptions,
   ownerDocument: Document = document,
 ): void {
   ownerDocument.getElementById(OVERLAY_HOST_ID)?.remove();
@@ -80,6 +86,12 @@ function renderOverlay(
       .field-status { flex: 0 0 auto; color: #788397; font-size: 11px; font-weight: 650; }
       .field-status.is-matched { color: #148044; }
       .field-status.is-review { color: #b35c08; }
+      .actions { display: flex; gap: 8px; margin-top: 12px; }
+      .action-button { min-height: 30px; padding: 0 10px; border: 1px solid #cfd7e5; border-radius: 6px; color: #344158; background: #fff; cursor: pointer; font: 700 11px/1 Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: .03em; }
+      .action-button:hover, .action-button:focus-visible { border-color: #2867dc; color: #1f58c4; background: #f2f6ff; outline: none; }
+      .action-button.is-primary { border-color: #2867dc; color: #fff; background: #2867dc; }
+      .action-button.is-primary:hover, .action-button.is-primary:focus-visible { background: #1f58c4; }
+      .action-button:disabled { cursor: wait; opacity: .65; }
       button { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 6px; color: #667085; background: transparent; cursor: pointer; font: 20px/1 sans-serif; }
       button:hover, button:focus-visible { color: #172033; background: #edf1f7; outline: none; }
     </style>
@@ -88,10 +100,31 @@ function renderOverlay(
       <h2>${title}</h2>
       <p class="message">${message}</p>
       ${content}
+      ${
+        actions
+          ? `<div class="actions"><button class="action-button" type="button" data-overlay-action="rescan">SCAN LẠI</button><button class="action-button is-primary" type="button" data-overlay-action="refill">ĐIỀN LẠI</button></div>`
+          : ""
+      }
       <button type="button" aria-label="Đóng thông báo">×</button>
     </section>
   `;
-  shadow.querySelector("button")?.addEventListener("click", () => host.remove());
+  shadow
+    .querySelector('button[aria-label="Đóng thông báo"]')
+    ?.addEventListener("click", () => host.remove());
+  if (actions) {
+    const runAction = (callback: () => void | Promise<void>) => {
+      shadow.querySelectorAll<HTMLButtonElement>("[data-overlay-action]").forEach((button) => {
+        button.disabled = true;
+      });
+      void callback();
+    };
+    shadow
+      .querySelector<HTMLButtonElement>('[data-overlay-action="rescan"]')
+      ?.addEventListener("click", () => runAction(actions.onRescan));
+    shadow
+      .querySelector<HTMLButtonElement>('[data-overlay-action="refill"]')
+      ?.addEventListener("click", () => runAction(actions.onRefill));
+  }
   (ownerDocument.body ?? ownerDocument.documentElement).append(host);
 }
 
@@ -99,6 +132,7 @@ function renderOverlay(
 export function showAutofillOverlay(
   results: DetectedField[],
   ownerDocument: Document = document,
+  actions?: OverlayActions,
 ): void {
   const filled = results.filter(({ status }) => status === "filled").length;
   const needsReview = results.filter(({ status }) => status === "verify_failed").length;
@@ -108,7 +142,7 @@ export function showAutofillOverlay(
   const content = results.length
     ? `<ul class="field-list" aria-label="Kết quả nhận diện field">${results.map(renderFieldRow).join("")}</ul>`
     : "";
-  renderOverlay({ title: "Đã hoàn tất điền form", message, content }, ownerDocument);
+  renderOverlay({ title: "Đã hoàn tất điền form", message, content, actions }, ownerDocument);
 }
 
 /** Shows a scoped warning without allowing page styles to affect its contents. */

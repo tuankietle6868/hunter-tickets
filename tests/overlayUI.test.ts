@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { OVERLAY_HOST_ID, OVERLAY_PANEL_ID, showAutofillOverlay } from "../src/content/overlayUI";
 import type { DetectedField } from "../src/shared/types";
@@ -48,5 +48,21 @@ describe("Autofill overlay", () => {
     expect(text).toContain("✓ Matched 94%");
     expect(text).toContain("Ghi chú");
     expect(text).toContain("○ Not found");
+  });
+
+  it("runs the supplied scan and refill actions from the overlay buttons", () => {
+    const onRescan = vi.fn();
+    const onRefill = vi.fn();
+    showAutofillOverlay([], document, { onRescan, onRefill });
+
+    const shadow = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot;
+    (shadow?.querySelector('[data-overlay-action="rescan"]') as HTMLButtonElement).click();
+
+    showAutofillOverlay([], document, { onRescan, onRefill });
+    const refreshedShadow = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot;
+    (refreshedShadow?.querySelector('[data-overlay-action="refill"]') as HTMLButtonElement).click();
+
+    expect(onRescan).toHaveBeenCalledOnce();
+    expect(onRefill).toHaveBeenCalledOnce();
   });
 });

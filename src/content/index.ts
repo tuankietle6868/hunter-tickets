@@ -21,7 +21,12 @@ async function runContentScript(): Promise<void> {
   }
 
   const results = await runGenericAutofill(profile, googleFormsAdapter);
-  if (overlayAutoEnabled) showAutofillOverlay(results);
+  if (overlayAutoEnabled) {
+    showAutofillOverlay(results, document, {
+      onRescan: runContentScript,
+      onRefill: runContentScript,
+    });
+  }
   console.log("[Smart Form Autofill] Fill results:", results);
 }
 
