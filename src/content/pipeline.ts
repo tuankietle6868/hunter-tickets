@@ -1,7 +1,7 @@
 import { scoreField } from "../shared/matcher";
 import type { DetectedField, FieldType, Profile } from "../shared/types";
 import { GenericHtmlAdapter } from "./adapters/genericHtmlAdapter";
-import { classifyControl } from "./controlType";
+import { classifyControl, getNativeSelectMode } from "./controlType";
 import { formatValueForInput } from "./dateValue";
 
 /** Minimum matching confidence required for automatic filling. */
@@ -40,6 +40,7 @@ export async function runGenericAutofill(
       const detectedField: DetectedField = {
         elementRef: new WeakRef(input ?? question),
         controlType: classifyControl(input ?? question),
+        selectMode: getNativeSelectMode(input),
         signals,
         candidateType: match.type,
         confidence: match.confidence,

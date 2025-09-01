@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { classifyControl } from "../src/content/controlType";
+import { classifyControl, getNativeSelectMode } from "../src/content/controlType";
 
 describe("ControlType classification", () => {
   afterEach(() => document.body.replaceChildren());
@@ -33,5 +33,15 @@ describe("ControlType classification", () => {
     expect(classifyControl(document.querySelector("#custom-select"))).toBe("CUSTOM_SELECT");
     expect(classifyControl(document.querySelector("#date-dialog"))).toBe("DATE_PICKER");
     expect(classifyControl(document.querySelector("#unknown"))).toBe("UNKNOWN");
+  });
+
+  it("detects native single and multiple select modes", () => {
+    document.body.innerHTML = `
+      <select id="single"><option>Nam</option></select>
+      <select id="multiple" multiple><option>Nam</option></select>
+    `;
+
+    expect(getNativeSelectMode(document.querySelector("#single"))).toBe("single");
+    expect(getNativeSelectMode(document.querySelector("#multiple"))).toBe("multiple");
   });
 });

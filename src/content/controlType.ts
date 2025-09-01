@@ -1,4 +1,4 @@
-import type { ControlType } from "../shared/types";
+import type { ControlType, SelectMode } from "../shared/types";
 
 const DATE_INPUT_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]);
 
@@ -45,4 +45,12 @@ export function classifyControl(element: HTMLElement | null | undefined): Contro
     return "CUSTOM_SELECT";
   }
   return "UNKNOWN";
+}
+
+/** Returns the native selection mode; ARIA custom selects are handled separately. */
+export function getNativeSelectMode(
+  element: HTMLElement | null | undefined,
+): SelectMode | undefined {
+  if (!(element instanceof HTMLSelectElement)) return undefined;
+  return element.multiple ? "multiple" : "single";
 }

@@ -75,4 +75,22 @@ describe("generic autofill pipeline", () => {
       { candidateType: "GENDER", status: "filled" },
     ]);
   });
+
+  it("scans native single and multiple select controls with their mode", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="gender-single">Giới tính</label>
+        <select id="gender-single"><option>Nam</option></select>
+        <label for="gender-multiple">Giới tính</label>
+        <select id="gender-multiple" multiple><option>Nam</option><option>Nữ</option></select>
+      </form>
+    `;
+
+    const results = await runGenericAutofill({});
+
+    expect(results.map(({ controlType, selectMode }) => ({ controlType, selectMode }))).toEqual([
+      { controlType: "SELECT", selectMode: "single" },
+      { controlType: "SELECT", selectMode: "multiple" },
+    ]);
+  });
 });
