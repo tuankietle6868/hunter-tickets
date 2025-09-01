@@ -3,9 +3,10 @@ import { setNativeValue } from "../filler";
 import { verifyValue } from "../validator";
 import type { IFormAdapter, QuestionBlock } from "./IFormAdapter";
 
-const EDITABLE_CONTROL_SELECTOR = "input, textarea, select, [contenteditable='true']";
+const EDITABLE_CONTROL_SELECTOR =
+  "input, textarea, select, [contenteditable='true'], [role='combobox'], button[aria-haspopup='listbox']";
 const QUESTION_SELECTOR =
-  "input:not([type='hidden']):not([type='submit']):not([type='radio']), textarea, select";
+  "input:not([type='hidden']):not([type='submit']):not([type='radio']), textarea, select, [role='combobox'], button[aria-haspopup='listbox']";
 const RADIO_SELECTOR = 'input[type="radio"]';
 
 function textContentOf(element: Element | null): string | undefined {

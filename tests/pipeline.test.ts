@@ -93,4 +93,22 @@ describe("generic autofill pipeline", () => {
       { controlType: "SELECT", selectMode: "multiple" },
     ]);
   });
+
+  it("scans ARIA comboboxes and listbox buttons as custom selects", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="gender-combobox">Giới tính</label>
+        <input id="gender-combobox" role="combobox" aria-expanded="false" type="text" />
+        <label for="gender-button">Giới tính</label>
+        <button id="gender-button" type="button" aria-haspopup="listbox">Chọn giới tính</button>
+      </form>
+    `;
+
+    const results = await runGenericAutofill({});
+
+    expect(results.map(({ controlType }) => controlType)).toEqual([
+      "CUSTOM_SELECT",
+      "CUSTOM_SELECT",
+    ]);
+  });
 });

@@ -26,11 +26,13 @@ describe("ControlType classification", () => {
   it("recognises ARIA custom selects, ARIA date pickers, and unknown elements", () => {
     document.body.innerHTML = `
       <button id="custom-select" role="combobox" aria-haspopup="listbox"></button>
+      <input id="input-combobox" role="combobox" type="text" />
       <button id="date-dialog" aria-haspopup="dialog" aria-label="Ngày sinh"></button>
       <div id="unknown"></div>
     `;
 
     expect(classifyControl(document.querySelector("#custom-select"))).toBe("CUSTOM_SELECT");
+    expect(classifyControl(document.querySelector("#input-combobox"))).toBe("CUSTOM_SELECT");
     expect(classifyControl(document.querySelector("#date-dialog"))).toBe("DATE_PICKER");
     expect(classifyControl(document.querySelector("#unknown"))).toBe("UNKNOWN");
   });
