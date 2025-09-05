@@ -64,4 +64,20 @@ describe("GenericHtmlAdapter.getQuestionText", () => {
 
     expect(new GenericHtmlAdapter().findQuestions()).toHaveLength(2);
   });
+
+  it("keeps a boolean checkbox separate from a multi-choice checkbox group", () => {
+    document.body.innerHTML = `
+      <label><input type="checkbox" name="terms" /> Đồng ý điều khoản</label>
+      <fieldset>
+        <legend>Sở thích</legend>
+        <label><input type="checkbox" name="hobby" value="music" /> Âm nhạc</label>
+        <label><input type="checkbox" name="hobby" value="sport" /> Thể thao</label>
+      </fieldset>
+    `;
+
+    const questions = new GenericHtmlAdapter().findQuestions();
+
+    expect(questions).toHaveLength(2);
+    expect(questions.map((question) => question.getAttribute("name"))).toEqual(["terms", "hobby"]);
+  });
 });

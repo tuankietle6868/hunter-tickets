@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { classifyControl, getNativeSelectMode } from "../src/content/controlType";
+import {
+  classifyControl,
+  getNativeCheckboxMode,
+  getNativeSelectMode,
+} from "../src/content/controlType";
 
 describe("ControlType classification", () => {
   afterEach(() => document.body.replaceChildren());
@@ -45,5 +49,19 @@ describe("ControlType classification", () => {
 
     expect(getNativeSelectMode(document.querySelector("#single"))).toBe("single");
     expect(getNativeSelectMode(document.querySelector("#multiple"))).toBe("multiple");
+  });
+
+  it("distinguishes a boolean checkbox from a multi-choice group", () => {
+    document.body.innerHTML = `
+      <label><input id="boolean" type="checkbox" name="terms" /> Đồng ý điều khoản</label>
+      <fieldset>
+        <legend>Sở thích</legend>
+        <label><input type="checkbox" name="hobby" value="music" /> Âm nhạc</label>
+        <label><input id="multiple" type="checkbox" name="hobby" value="sport" /> Thể thao</label>
+      </fieldset>
+    `;
+
+    expect(getNativeCheckboxMode(document.querySelector("#boolean"))).toBe("boolean");
+    expect(getNativeCheckboxMode(document.querySelector("#multiple"))).toBe("multiple");
   });
 });

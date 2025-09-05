@@ -1,4 +1,4 @@
-import type { ControlType, SelectMode } from "../shared/types";
+import type { CheckboxMode, ControlType, SelectMode } from "../shared/types";
 
 const DATE_INPUT_TYPES = new Set(["date", "datetime-local", "month", "time", "week"]);
 
@@ -54,4 +54,22 @@ export function getNativeSelectMode(
 ): SelectMode | undefined {
   if (!(element instanceof HTMLSelectElement)) return undefined;
   return element.multiple ? "multiple" : "single";
+}
+
+/** Distinguishes a boolean checkbox from a multi-choice checkbox group. */
+export function getNativeCheckboxMode(
+  element: HTMLElement | null | undefined,
+): CheckboxMode | undefined {
+  if (!(element instanceof HTMLInputElement) || element.type !== "checkbox") return undefined;
+
+  const container = element.closest("fieldset, [role='group']");
+  const candidates = Array.from(
+    (container ?? element.ownerDocument).querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]',
+    ),
+  ).filter((candidate) => {
+    if (container) return true;
+    return candidate.name === element.name && candidate.form === element.form;
+  });
+  return candidates.length > 1 ? "multiple" : "boolean";
 }

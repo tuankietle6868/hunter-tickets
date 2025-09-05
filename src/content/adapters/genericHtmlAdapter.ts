@@ -6,8 +6,9 @@ import type { IFormAdapter, QuestionBlock } from "./IFormAdapter";
 const EDITABLE_CONTROL_SELECTOR =
   "input, textarea, select, [contenteditable='true'], [role='combobox'], button[aria-haspopup='listbox']";
 const QUESTION_SELECTOR =
-  "input:not([type='hidden']):not([type='submit']):not([type='radio']), textarea, select, [role='combobox'], button[aria-haspopup='listbox']";
+  "input:not([type='hidden']):not([type='submit']):not([type='radio']):not([type='checkbox']), textarea, select, [role='combobox'], button[aria-haspopup='listbox']";
 const RADIO_SELECTOR = 'input[type="radio"]';
+const CHECKBOX_SELECTOR = 'input[type="checkbox"]';
 
 function textContentOf(element: Element | null): string | undefined {
   const text = element?.textContent?.trim().replace(/\s+/g, " ");
@@ -66,10 +67,23 @@ function radioGroupInputs(input: HTMLInputElement): HTMLInputElement[] {
   return allRadios.filter((option) => option.name === input.name && option.form === input.form);
 }
 
+function checkboxGroupInputs(input: HTMLInputElement): HTMLInputElement[] {
+  const container = input.closest("fieldset, [role='group']");
+  const allCheckboxes = Array.from(
+    (container ?? input.ownerDocument).querySelectorAll<HTMLInputElement>(CHECKBOX_SELECTOR),
+  );
+  if (container) return allCheckboxes;
+  if (!input.name) return [input];
+  return allCheckboxes.filter((option) => option.name === input.name && option.form === input.form);
+}
+
 /** Extracts matching signals from standard HTML form controls and labels. */
 export class GenericHtmlAdapter implements IFormAdapter {
   isApplicable(): boolean {
-    return document.querySelector(QUESTION_SELECTOR) !== null;
+    return (
+      document.querySelector(`${QUESTION_SELECTOR}, ${RADIO_SELECTOR}, ${CHECKBOX_SELECTOR}`) !==
+      null
+    );
   }
 
   findQuestions(): QuestionBlock[] {
@@ -77,7 +91,10 @@ export class GenericHtmlAdapter implements IFormAdapter {
     const firstRadioInEachGroup = Array.from(
       document.querySelectorAll<HTMLInputElement>(RADIO_SELECTOR),
     ).filter((radio) => radioGroupInputs(radio)[0] === radio);
-    return [...standardControls, ...firstRadioInEachGroup];
+    const firstCheckboxInEachGroup = Array.from(
+      document.querySelectorAll<HTMLInputElement>(CHECKBOX_SELECTOR),
+    ).filter((checkbox) => checkboxGroupInputs(checkbox)[0] === checkbox);
+    return [...standardControls, ...firstRadioInEachGroup, ...firstCheckboxInEachGroup];
   }
 
   /**
@@ -94,7 +111,8 @@ export class GenericHtmlAdapter implements IFormAdapter {
       : undefined;
     const label = associatedLabel ?? control.closest("label");
     const groupLabel =
-      control instanceof HTMLInputElement && control.type === "radio"
+      control instanceof HTMLInputElement &&
+      (control.type === "radio" || control.type === "checkbox")
         ? textContentOf(control.closest("fieldset")?.querySelector("legend"))
         : undefined;
     const labelText = textContentOf(label);

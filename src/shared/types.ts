@@ -23,6 +23,9 @@ export type ControlType =
 /** Native select mode, present only when `controlType` is `SELECT`. */
 export type SelectMode = "single" | "multiple";
 
+/** Checkbox interaction mode, present only when `controlType` is `CHECKBOX`. */
+export type CheckboxMode = "boolean" | "multiple";
+
 /** Personal data stored locally and used to populate detected form fields. */
 export interface Profile {
   fullName?: string;
@@ -54,6 +57,7 @@ export interface DetectedField {
   elementRef: WeakRef<HTMLElement>;
   controlType: ControlType;
   selectMode?: SelectMode;
+  checkboxMode?: CheckboxMode;
   signals: FieldSignals;
   candidateType: FieldType;
   /** Match confidence on a 0–100 scale. */

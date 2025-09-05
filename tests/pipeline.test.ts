@@ -111,4 +111,25 @@ describe("generic autofill pipeline", () => {
       "CUSTOM_SELECT",
     ]);
   });
+
+  it("reports boolean and multi-choice checkbox modes", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label><input type="checkbox" name="terms" /> Đồng ý điều khoản</label>
+        <fieldset><legend>Sở thích</legend>
+          <label><input type="checkbox" name="hobby" value="music" /> Âm nhạc</label>
+          <label><input type="checkbox" name="hobby" value="sport" /> Thể thao</label>
+        </fieldset>
+      </form>
+    `;
+
+    const results = await runGenericAutofill({});
+
+    expect(results.map(({ controlType, checkboxMode }) => ({ controlType, checkboxMode }))).toEqual(
+      [
+        { controlType: "CHECKBOX", checkboxMode: "boolean" },
+        { controlType: "CHECKBOX", checkboxMode: "multiple" },
+      ],
+    );
+  });
 });
