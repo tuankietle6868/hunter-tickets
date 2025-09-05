@@ -55,10 +55,15 @@ function isMatchingRadioOption(input: HTMLInputElement, value: string): boolean 
 }
 
 function radioGroupInputs(input: HTMLInputElement): HTMLInputElement[] {
-  if (!input.name) return [input];
-  return Array.from(input.ownerDocument.querySelectorAll<HTMLInputElement>(RADIO_SELECTOR)).filter(
-    (option) => option.name === input.name,
+  const container = input.closest("fieldset, [role='radiogroup']");
+  const allRadios = Array.from(
+    (container ?? input.ownerDocument).querySelectorAll<HTMLInputElement>(RADIO_SELECTOR),
   );
+
+  if (!input.name) return container ? allRadios : [input];
+  // HTML groups radios by name within the same form owner. Keeping that scope
+  // prevents same-named questions in separate forms from being merged.
+  return allRadios.filter((option) => option.name === input.name && option.form === input.form);
 }
 
 /** Extracts matching signals from standard HTML form controls and labels. */
@@ -71,11 +76,7 @@ export class GenericHtmlAdapter implements IFormAdapter {
     const standardControls = Array.from(document.querySelectorAll<HTMLElement>(QUESTION_SELECTOR));
     const firstRadioInEachGroup = Array.from(
       document.querySelectorAll<HTMLInputElement>(RADIO_SELECTOR),
-    ).filter((radio, index, radios) => {
-      return (
-        !radio.name || radios.findIndex((candidate) => candidate.name === radio.name) === index
-      );
-    });
+    ).filter((radio) => radioGroupInputs(radio)[0] === radio);
     return [...standardControls, ...firstRadioInEachGroup];
   }
 

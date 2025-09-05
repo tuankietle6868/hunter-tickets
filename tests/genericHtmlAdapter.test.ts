@@ -37,4 +37,31 @@ describe("GenericHtmlAdapter.getQuestionText", () => {
       inputType: "text",
     });
   });
+
+  it("groups all radio options in one question into one logical field", () => {
+    document.body.innerHTML = `
+      <fieldset>
+        <legend>Giới tính</legend>
+        <label><input type="radio" name="gender" value="male" /> Nam</label>
+        <label><input type="radio" name="gender" value="female" /> Nữ</label>
+        <label><input type="radio" name="gender" value="other" /> Khác</label>
+      </fieldset>
+    `;
+    const adapter = new GenericHtmlAdapter();
+
+    const questions = adapter.findQuestions();
+
+    expect(questions).toHaveLength(1);
+    expect(adapter.getQuestionText(questions[0]).visibleQuestionText).toBe("Giới tính");
+    expect(adapter.findInput(questions[0])?.getAttribute("value")).toBe("male");
+  });
+
+  it("does not merge same-named radio questions from separate forms", () => {
+    document.body.innerHTML = `
+      <form><fieldset><legend>Giới tính</legend><input type="radio" name="gender" /></fieldset></form>
+      <form><fieldset><legend>Giới tính</legend><input type="radio" name="gender" /></fieldset></form>
+    `;
+
+    expect(new GenericHtmlAdapter().findQuestions()).toHaveLength(2);
+  });
 });
