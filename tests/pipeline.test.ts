@@ -132,4 +132,23 @@ describe("generic autofill pipeline", () => {
       ],
     );
   });
+
+  it("scans native and custom date picker controls", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="native-date">Ngày sinh</label>
+        <input id="native-date" type="date" />
+        <button id="custom-date" type="button" aria-haspopup="dialog" aria-label="Ngày tháng năm sinh"></button>
+        <div id="role-date" role="datepicker" aria-label="Ngày sinh"></div>
+      </form>
+    `;
+
+    const results = await runGenericAutofill({});
+
+    expect(results.map(({ controlType }) => controlType)).toEqual([
+      "DATE_PICKER",
+      "DATE_PICKER",
+      "DATE_PICKER",
+    ]);
+  });
 });

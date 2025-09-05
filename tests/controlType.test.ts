@@ -31,12 +31,14 @@ describe("ControlType classification", () => {
     document.body.innerHTML = `
       <button id="custom-select" role="combobox" aria-haspopup="listbox"></button>
       <input id="input-combobox" role="combobox" type="text" />
+      <input id="date-combobox" role="combobox" aria-label="Ngày sinh" type="text" />
       <button id="date-dialog" aria-haspopup="dialog" aria-label="Ngày sinh"></button>
       <div id="unknown"></div>
     `;
 
     expect(classifyControl(document.querySelector("#custom-select"))).toBe("CUSTOM_SELECT");
     expect(classifyControl(document.querySelector("#input-combobox"))).toBe("CUSTOM_SELECT");
+    expect(classifyControl(document.querySelector("#date-combobox"))).toBe("DATE_PICKER");
     expect(classifyControl(document.querySelector("#date-dialog"))).toBe("DATE_PICKER");
     expect(classifyControl(document.querySelector("#unknown"))).toBe("UNKNOWN");
   });

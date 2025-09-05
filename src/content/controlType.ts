@@ -16,7 +16,7 @@ function hasDatePickerSemantics(element: HTMLElement): boolean {
     (element instanceof HTMLInputElement &&
       element.type === "text" &&
       hasDateHint &&
-      /\d/.test(element.placeholder))
+      (/\d/.test(element.placeholder) || element.getAttribute("role") === "combobox"))
   );
 }
 
@@ -26,7 +26,24 @@ export function classifyControl(element: HTMLElement | null | undefined): Contro
   if (element instanceof HTMLTextAreaElement) return "TEXTAREA";
   if (element instanceof HTMLSelectElement) return "SELECT";
 
+  if (element instanceof HTMLInputElement) {
+    if (element.type === "checkbox") return "CHECKBOX";
+    if (element.type === "radio") return "RADIO";
+    if (DATE_INPUT_TYPES.has(element.type) || hasDatePickerSemantics(element)) return "DATE_PICKER";
+    if (
+      element.getAttribute("role") === "combobox" ||
+      element.getAttribute("role") === "listbox" ||
+      element.getAttribute("aria-haspopup") === "listbox"
+    ) {
+      return "CUSTOM_SELECT";
+    }
+    return "INPUT";
+  }
+
   const role = element.getAttribute("role");
+  if (role === "checkbox") return "CHECKBOX";
+  if (role === "radio") return "RADIO";
+  if (hasDatePickerSemantics(element)) return "DATE_PICKER";
   if (
     role === "combobox" ||
     role === "listbox" ||
@@ -34,17 +51,6 @@ export function classifyControl(element: HTMLElement | null | undefined): Contro
   ) {
     return "CUSTOM_SELECT";
   }
-
-  if (element instanceof HTMLInputElement) {
-    if (element.type === "checkbox") return "CHECKBOX";
-    if (element.type === "radio") return "RADIO";
-    if (DATE_INPUT_TYPES.has(element.type) || hasDatePickerSemantics(element)) return "DATE_PICKER";
-    return "INPUT";
-  }
-
-  if (role === "checkbox") return "CHECKBOX";
-  if (role === "radio") return "RADIO";
-  if (hasDatePickerSemantics(element)) return "DATE_PICKER";
   return "UNKNOWN";
 }
 

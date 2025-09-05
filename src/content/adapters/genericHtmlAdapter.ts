@@ -4,9 +4,9 @@ import { verifyValue } from "../validator";
 import type { IFormAdapter, QuestionBlock } from "./IFormAdapter";
 
 const EDITABLE_CONTROL_SELECTOR =
-  "input, textarea, select, [contenteditable='true'], [role='combobox'], button[aria-haspopup='listbox']";
+  "input, textarea, select, [contenteditable='true'], [role='combobox'], button[aria-haspopup='listbox'], [role='datepicker'], [data-datepicker], button[aria-haspopup='dialog'][aria-label*='date' i], button[aria-haspopup='dialog'][aria-label*='ngày' i], button[aria-haspopup='dialog'][aria-label*='birth' i], button[aria-haspopup='dialog'][aria-label*='sinh' i]";
 const QUESTION_SELECTOR =
-  "input:not([type='hidden']):not([type='submit']):not([type='radio']):not([type='checkbox']), textarea, select, [role='combobox'], button[aria-haspopup='listbox']";
+  "input:not([type='hidden']):not([type='submit']):not([type='radio']):not([type='checkbox']), textarea, select, [role='combobox'], button[aria-haspopup='listbox'], [role='datepicker'], [data-datepicker], button[aria-haspopup='dialog'][aria-label*='date' i], button[aria-haspopup='dialog'][aria-label*='ngày' i], button[aria-haspopup='dialog'][aria-label*='birth' i], button[aria-haspopup='dialog'][aria-label*='sinh' i]";
 const RADIO_SELECTOR = 'input[type="radio"]';
 const CHECKBOX_SELECTOR = 'input[type="checkbox"]';
 
