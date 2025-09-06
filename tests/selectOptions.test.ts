@@ -50,4 +50,14 @@ describe("extractOptions", () => {
     expect(matchProfileToOption(" nu ", options)).toEqual(options[2]);
     expect(matchProfileToOption("200", options)).toBeUndefined();
   });
+
+  it("falls back to a normalized option value when its text differs", () => {
+    const options = [
+      { value: "01", text: "Hà Nội", index: 0, selected: false },
+      { value: "79", text: "Hồ Chí Minh", index: 1, selected: false },
+    ];
+
+    expect(matchProfileToOption("79", options)).toEqual(options[1]);
+    expect(matchProfileToOption("Hồ Chí Minh", options)).toEqual(options[1]);
+  });
 });

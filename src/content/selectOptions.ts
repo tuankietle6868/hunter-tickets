@@ -22,14 +22,17 @@ export function normalizeOptionText(value: string): string {
 }
 
 /**
- * Finds the option whose visible text exactly matches a profile value after
- * normalisation. Exact matching keeps numeric choices such as `2000` safe.
+ * Finds an option by exact normalized visible text, then by its normalized
+ * `value` attribute when display text and profile data use different forms.
  */
 export function matchProfileToOption(
   profileValue: string,
   options: readonly SelectOption[],
 ): SelectOption | undefined {
   const normalizedProfileValue = normalizeOptionText(profileValue);
-  return options.find((option) => normalizeOptionText(option.text) === normalizedProfileValue);
+  return (
+    options.find((option) => normalizeOptionText(option.text) === normalizedProfileValue) ??
+    options.find((option) => normalizeOptionText(option.value) === normalizedProfileValue)
+  );
 }
 import { normalize, stripDiacritics } from "../shared/normalizer";
