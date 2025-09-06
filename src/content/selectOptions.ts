@@ -15,3 +15,21 @@ export function extractOptions(select: HTMLSelectElement): SelectOption[] {
     selected: option.selected,
   }));
 }
+
+/** Normalizes human-readable option text for exact, locale-tolerant matching. */
+export function normalizeOptionText(value: string): string {
+  return stripDiacritics(normalize(value));
+}
+
+/**
+ * Finds the option whose visible text exactly matches a profile value after
+ * normalisation. Exact matching keeps numeric choices such as `2000` safe.
+ */
+export function matchProfileToOption(
+  profileValue: string,
+  options: readonly SelectOption[],
+): SelectOption | undefined {
+  const normalizedProfileValue = normalizeOptionText(profileValue);
+  return options.find((option) => normalizeOptionText(option.text) === normalizedProfileValue);
+}
+import { normalize, stripDiacritics } from "../shared/normalizer";

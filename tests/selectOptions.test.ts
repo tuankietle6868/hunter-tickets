@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { extractOptions } from "../src/content/selectOptions";
+import { extractOptions, matchProfileToOption } from "../src/content/selectOptions";
 
 describe("extractOptions", () => {
   afterEach(() => document.body.replaceChildren());
@@ -37,5 +37,17 @@ describe("extractOptions", () => {
       { value: "sport", text: "Thể thao", index: 1, selected: false },
       { value: "travel", text: "Du lịch", index: 2, selected: true },
     ]);
+  });
+
+  it("matches a profile value to an option by normalized visible text", () => {
+    const options = [
+      { value: "year-1999", text: " 1999 ", index: 0, selected: false },
+      { value: "year-2000", text: "2000", index: 1, selected: false },
+      { value: "female", text: "Nữ", index: 2, selected: false },
+    ];
+
+    expect(matchProfileToOption("2000", options)).toEqual(options[1]);
+    expect(matchProfileToOption(" nu ", options)).toEqual(options[2]);
+    expect(matchProfileToOption("200", options)).toBeUndefined();
   });
 });
