@@ -4,6 +4,7 @@ export interface SelectOption {
   text: string;
   index: number;
   selected: boolean;
+  disabled: boolean;
 }
 
 /** Extracts every option from a native select, including options in optgroups. */
@@ -13,6 +14,9 @@ export function extractOptions(select: HTMLSelectElement): SelectOption[] {
     text: option.text.trim(),
     index: option.index,
     selected: option.selected,
+    disabled:
+      option.disabled ||
+      (option.parentElement instanceof HTMLOptGroupElement && option.parentElement.disabled),
   }));
 }
 
@@ -35,6 +39,12 @@ export function canonicalizeOptionText(value: string): string {
   return OPTION_CANONICAL_ALIASES[normalized] ?? normalized;
 }
 
+function isPlaceholderOption(option: SelectOption): boolean {
+  if (option.value.trim() === "") return true;
+  const text = normalizeOptionText(option.text).replace(/[-–—]/g, "").trim();
+  return /^(chon|vui long chon|select|please select)$/.test(text);
+}
+
 /**
  * Finds an option by exact normalized visible text, then by its normalized
  * `value` attribute when display text and profile data use different forms.
@@ -44,13 +54,20 @@ export function matchProfileToOption(
   options: readonly SelectOption[],
 ): SelectOption | undefined {
   const normalizedProfileValue = normalizeOptionText(profileValue);
+  const availableOptions = options.filter(
+    (option) => !option.disabled && !isPlaceholderOption(option),
+  );
   return (
-    options.find((option) => normalizeOptionText(option.text) === normalizedProfileValue) ??
-    options.find((option) => normalizeOptionText(option.value) === normalizedProfileValue) ??
-    options.find(
+    availableOptions.find(
+      (option) => normalizeOptionText(option.text) === normalizedProfileValue,
+    ) ??
+    availableOptions.find(
+      (option) => normalizeOptionText(option.value) === normalizedProfileValue,
+    ) ??
+    availableOptions.find(
       (option) => canonicalizeOptionText(option.text) === canonicalizeOptionText(profileValue),
     ) ??
-    options.find(
+    availableOptions.find(
       (option) => canonicalizeOptionText(option.value) === canonicalizeOptionText(profileValue),
     )
   );
