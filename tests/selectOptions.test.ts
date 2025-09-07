@@ -60,4 +60,16 @@ describe("extractOptions", () => {
     expect(matchProfileToOption("79", options)).toEqual(options[1]);
     expect(matchProfileToOption("Hồ Chí Minh", options)).toEqual(options[1]);
   });
+
+  it("matches known option aliases through a canonical form", () => {
+    const option = {
+      value: "hcm-city",
+      text: "Thành phố Hồ Chí Minh",
+      index: 0,
+      selected: false,
+    };
+
+    expect(matchProfileToOption("TP HCM", [option])).toEqual(option);
+    expect(matchProfileToOption("TP. Hồ Chí Minh", [option])).toEqual(option);
+  });
 });
