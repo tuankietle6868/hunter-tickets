@@ -7,6 +7,24 @@ export interface SelectOption {
   disabled: boolean;
 }
 
+/**
+ * Waits until a native select is enabled by the page. This makes cascading
+ * controls detectable from their actual disabled state, not their DOM order.
+ */
+export function waitForNativeSelectEnabled(select: HTMLSelectElement): Promise<void> {
+  if (!select.disabled) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (!select.disabled) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(select, { attributes: true, attributeFilter: ["disabled"] });
+  });
+}
+
 /** Extracts every option from a native select, including options in optgroups. */
 export function extractOptions(select: HTMLSelectElement): SelectOption[] {
   return Array.from(select.options, (option) => ({

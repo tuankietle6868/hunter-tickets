@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { extractOptions, matchProfileToOption } from "../src/content/selectOptions";
+import {
+  extractOptions,
+  matchProfileToOption,
+  waitForNativeSelectEnabled,
+} from "../src/content/selectOptions";
 
 describe("extractOptions", () => {
   afterEach(() => document.body.replaceChildren());
@@ -37,6 +41,27 @@ describe("extractOptions", () => {
       { value: "sport", text: "Thể thao", index: 1, selected: false, disabled: false },
       { value: "travel", text: "Du lịch", index: 2, selected: true, disabled: false },
     ]);
+  });
+
+  it("detects a cascading child select from its disabled state, then waits for it to enable", async () => {
+    document.body.innerHTML = `
+      <select id="province"><option value="">-- Chọn tỉnh --</option><option value="79">Hồ Chí Minh</option></select>
+      <select id="ward" disabled><option value="">-- Chọn phường/xã --</option></select>
+    `;
+    const province = document.querySelector<HTMLSelectElement>("#province")!;
+    const ward = document.querySelector<HTMLSelectElement>("#ward")!;
+    province.addEventListener("change", () => {
+      if (province.value) ward.disabled = false;
+    });
+
+    const enabled = waitForNativeSelectEnabled(ward);
+    expect(ward.disabled).toBe(true);
+
+    province.value = "79";
+    province.dispatchEvent(new Event("change", { bubbles: true }));
+    await enabled;
+
+    expect(ward.disabled).toBe(false);
   });
 
   it("matches a profile value to an option by normalized visible text", () => {
