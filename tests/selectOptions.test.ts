@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  fillCascadingSelectChain,
   fillParentThenWaitChild,
   extractOptions,
   matchProfileToOption,
@@ -114,6 +115,41 @@ describe("extractOptions", () => {
     await fillParentThenWaitChild(province, "79", ward);
 
     expect(ward.disabled).toBe(false);
+  });
+
+  it("fills every discovered level of a legacy Tỉnh → Quận/Huyện → Xã form", async () => {
+    document.body.innerHTML = `
+      <form id="legacy-address-form">
+        <select name="province"><option value="79">Hồ Chí Minh</option></select>
+        <select name="district" disabled><option value="">-- Chọn quận/huyện --</option></select>
+        <select name="ward" disabled><option value="">-- Chọn xã --</option></select>
+      </form>
+    `;
+    const form = document.querySelector<HTMLFormElement>("#legacy-address-form")!;
+    const [province, district, ward] = Array.from(form.querySelectorAll<HTMLSelectElement>("select"));
+    const changes: string[] = [];
+
+    province.addEventListener("change", () => {
+      changes.push("province");
+      district.replaceChildren(new Option("Quận 1", "760"));
+      district.disabled = false;
+    });
+    district.addEventListener("change", () => {
+      changes.push("district");
+      ward.replaceChildren(new Option("Phường Bến Nghé", "26734"));
+      ward.disabled = false;
+    });
+    ward.addEventListener("change", () => changes.push("ward"));
+
+    await fillCascadingSelectChain(
+      Array.from(form.querySelectorAll<HTMLSelectElement>("select"), (select, index) => ({
+        select,
+        value: ["79", "760", "26734"][index],
+      })),
+    );
+
+    expect([province.value, district.value, ward.value]).toEqual(["79", "760", "26734"]);
+    expect(changes).toEqual(["province", "district", "ward"]);
   });
 
   it("stops waiting after the configured cascade timeout", async () => {

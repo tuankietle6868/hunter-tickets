@@ -28,6 +28,17 @@ export function waitForNativeSelectEnabled(select: HTMLSelectElement): Promise<v
 /** Maximum time to wait for a dependent native select to react to its parent. */
 export const CASCADE_CHILD_WAIT_TIMEOUT_MS = 2_500;
 
+/** A discovered select control and the option value that should be applied to it. */
+export interface CascadingSelectStep {
+  select: HTMLSelectElement;
+  value: string;
+}
+
+function setNativeSelectValue(select: HTMLSelectElement, value: string): void {
+  select.value = value;
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
 /**
  * Selects a parent value, notifies the form, then waits for its dependent
  * select to become usable. Some forms keep the child enabled and only replace
@@ -85,9 +96,27 @@ export function fillParentThenWaitChild(
 
     // Start observing before dispatching so a synchronous page listener cannot
     // update the child between filling the parent and registering the observer.
-    parent.value = value;
-    parent.dispatchEvent(new Event("change", { bubbles: true }));
+    setNativeSelectValue(parent, value);
   });
+}
+
+/**
+ * Fills every select in a discovered cascade, regardless of how many levels
+ * the current form exposes. Each non-final step waits for the next discovered
+ * select before the following value is applied.
+ */
+export async function fillCascadingSelectChain(
+  steps: readonly CascadingSelectStep[],
+  timeoutMs = CASCADE_CHILD_WAIT_TIMEOUT_MS,
+): Promise<void> {
+  for (const [index, step] of steps.entries()) {
+    const child = steps[index + 1]?.select;
+    if (child) {
+      await fillParentThenWaitChild(step.select, step.value, child, timeoutMs);
+    } else {
+      setNativeSelectValue(step.select, step.value);
+    }
+  }
 }
 
 /** Extracts every option from a native select, including options in optgroups. */
