@@ -25,6 +25,71 @@ export function waitForNativeSelectEnabled(select: HTMLSelectElement): Promise<v
   });
 }
 
+/** Maximum time to wait for a dependent native select to react to its parent. */
+export const CASCADE_CHILD_WAIT_TIMEOUT_MS = 2_500;
+
+/**
+ * Selects a parent value, notifies the form, then waits for its dependent
+ * select to become usable. Some forms keep the child enabled and only replace
+ * its options, so option mutations are treated as a ready signal too.
+ *
+ * The promise always settles within `timeoutMs`. A timeout is deliberately
+ * non-fatal: callers can inspect the child and decide whether it is safe to
+ * continue filling it.
+ */
+export function fillParentThenWaitChild(
+  parent: HTMLSelectElement,
+  value: string,
+  child: HTMLSelectElement,
+  timeoutMs = CASCADE_CHILD_WAIT_TIMEOUT_MS,
+): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      observer.disconnect();
+      clearTimeout(timeoutId);
+      resolve();
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      if (!child.disabled) {
+        finish();
+        return;
+      }
+
+      // A child may remain enabled while its list is refreshed. Watching the
+      // option subtree catches replacement, insertion, and option updates.
+      if (
+        mutations.some(
+          (mutation) =>
+            mutation.type === "childList" ||
+            mutation.type === "characterData" ||
+            (mutation.type === "attributes" && mutation.target !== child),
+        )
+      ) {
+        finish();
+      }
+    });
+
+    observer.observe(child, {
+      attributes: true,
+      attributeFilter: ["disabled", "value", "selected", "label"],
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    const timeoutId = setTimeout(finish, timeoutMs);
+
+    // Start observing before dispatching so a synchronous page listener cannot
+    // update the child between filling the parent and registering the observer.
+    parent.value = value;
+    parent.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
 /** Extracts every option from a native select, including options in optgroups. */
 export function extractOptions(select: HTMLSelectElement): SelectOption[] {
   return Array.from(select.options, (option) => ({
