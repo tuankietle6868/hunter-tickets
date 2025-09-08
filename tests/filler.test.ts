@@ -25,6 +25,16 @@ describe("setNativeValue", () => {
     expect(inputEvent).toBeInstanceOf(InputEvent);
   });
 
+  it("sets an ISO date directly on a native date input", () => {
+    const input = document.createElement("input");
+    input.type = "date";
+    document.body.append(input);
+
+    setNativeValue(input, "1999-10-20");
+
+    expect(input.value).toBe("1999-10-20");
+  });
+
   it("bypasses a React-like instance setter while updating the native value", () => {
     const input = document.createElement("input");
     const nativeValue = Object.getOwnPropertyDescriptor(

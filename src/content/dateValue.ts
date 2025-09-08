@@ -6,6 +6,13 @@ interface DateParts {
   day: number;
 }
 
+/** The three independent native selects used by legacy birthday controls. */
+export interface SeparateDateSelects {
+  day: HTMLSelectElement;
+  month: HTMLSelectElement;
+  year: HTMLSelectElement;
+}
+
 function parseDate(value: string): DateParts | undefined {
   const match = value
     .trim()
@@ -25,6 +32,29 @@ function parseDate(value: string): DateParts | undefined {
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
+}
+
+function setDateSelectValue(select: HTMLSelectElement, values: readonly string[]): void {
+  const option = Array.from(select.options).find(
+    (candidate) => values.includes(candidate.value) || values.includes(candidate.text.trim()),
+  );
+  select.value = option?.value ?? values[0];
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+/**
+ * Fills independent day, month, and year selects from one stored date. These
+ * controls are not a cascade, so each value is applied immediately with no
+ * waiting between the three fields.
+ */
+export function fillSeparateDateSelects(value: string, selects: SeparateDateSelects): boolean {
+  const parts = parseDate(value);
+  if (!parts) return false;
+
+  setDateSelectValue(selects.day, [pad(parts.day), String(parts.day)]);
+  setDateSelectValue(selects.month, [pad(parts.month), String(parts.month)]);
+  setDateSelectValue(selects.year, [String(parts.year)]);
+  return true;
 }
 
 /**
