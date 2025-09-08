@@ -53,12 +53,15 @@ function getFieldName(field: DetectedField): string {
 function renderFieldRow(field: DetectedField, index: number, selectable: boolean): string {
   const confidence = Math.max(0, Math.min(100, Math.round(field.confidence)));
   const matched = field.status === "filled";
+  const fieldName = escapeHtml(getFieldName(field));
   const status = matched
     ? `<span class="field-status is-matched">✓ Matched ${confidence}%</span>`
     : field.status === "verify_failed"
       ? `<span class="field-status is-review">! Check ${confidence}%</span>`
+      : field.status === "cascade_timeout"
+        ? `<span class="field-status is-review">đang chờ / không tự chọn được — vui lòng chọn tay</span>`
       : `<span class="field-status">○ Not found</span>`;
-  return `<li class="field-row${selectable ? " is-selectable" : ""}"${selectable ? ` data-field-index="${index}" role="button" tabindex="0" aria-label="Đi tới trường ${escapeHtml(getFieldName(field))}"` : ""}><span class="field-name">${escapeHtml(getFieldName(field))}</span>${status}</li>`;
+  return `<li class="field-row${selectable ? " is-selectable" : ""}"${selectable ? ` data-field-index="${index}" role="button" tabindex="0" aria-label="Đi tới trường ${fieldName}"` : ""}><span class="field-name">${fieldName}${field.status === "cascade_timeout" ? ":" : ""}</span>${status}</li>`;
 }
 
 function renderOverlay(
@@ -161,7 +164,10 @@ export function showAutofillOverlay(
 ): void {
   const filled = results.filter(({ status }) => status === "filled").length;
   const needsReview = results.filter(({ status }) => status === "verify_failed").length;
-  const message = needsReview
+  const cascadeTimeouts = results.filter(({ status }) => status === "cascade_timeout").length;
+  const message = cascadeTimeouts
+    ? `Đã điền ${filled} trường. Có ${cascadeTimeouts} trường không tự chọn được — vui lòng chọn tay.`
+    : needsReview
     ? `Đã điền ${filled} trường. Có ${needsReview} trường cần kiểm tra lại.`
     : `Đã điền ${filled} trường. Hãy kiểm tra thông tin trước khi gửi form.`;
   const content = results.length

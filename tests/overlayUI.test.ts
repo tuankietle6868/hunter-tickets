@@ -63,6 +63,23 @@ describe("Autofill overlay", () => {
     expect(text).toContain("○ Not found");
   });
 
+  it("tells the user to choose a cascading field manually after its wait times out", () => {
+    const results = [
+      {
+        candidateType: "UNKNOWN",
+        confidence: 100,
+        signals: { labelText: "Phường/Xã" },
+        status: "cascade_timeout",
+      },
+    ] as DetectedField[];
+
+    showAutofillOverlay(results);
+
+    const text = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot?.textContent;
+    expect(text).toContain("Phường/Xã");
+    expect(text).toContain("đang chờ / không tự chọn được — vui lòng chọn tay");
+  });
+
   it("runs the supplied scan and refill actions from the overlay buttons", () => {
     const onRescan = vi.fn();
     const onRefill = vi.fn();

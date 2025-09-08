@@ -1,3 +1,5 @@
+import type { DetectedField } from "../shared/types";
+
 /** A serialisable snapshot of one native `<option>` element. */
 export interface SelectOption {
   value: string;
@@ -28,10 +30,21 @@ export function waitForNativeSelectEnabled(select: HTMLSelectElement): Promise<v
 /** Maximum time to wait for a dependent native select to react to its parent. */
 export const CASCADE_CHILD_WAIT_TIMEOUT_MS = 2_500;
 
+/** The bounded outcome of waiting for a dependent select. */
+export type CascadeChildWaitResult = "ready" | "timeout";
+
 /** A discovered select control and the option value that should be applied to it. */
 export interface CascadingSelectStep {
   select: HTMLSelectElement;
   value: string;
+  /** The scan result to surface when this dependent field cannot be populated. */
+  detectedField?: DetectedField;
+}
+
+/** One step's outcome when filling a discovered cascade. */
+export interface CascadingSelectChainResult {
+  step: CascadingSelectStep;
+  status: "filled" | "cascade_timeout";
 }
 
 function setNativeSelectValue(select: HTMLSelectElement, value: string): void {
@@ -53,21 +66,21 @@ export function fillParentThenWaitChild(
   value: string,
   child: HTMLSelectElement,
   timeoutMs = CASCADE_CHILD_WAIT_TIMEOUT_MS,
-): Promise<void> {
+): Promise<CascadeChildWaitResult> {
   return new Promise((resolve) => {
     let settled = false;
 
-    const finish = () => {
+    const finish = (result: CascadeChildWaitResult) => {
       if (settled) return;
       settled = true;
       observer.disconnect();
       clearTimeout(timeoutId);
-      resolve();
+      resolve(result);
     };
 
     const observer = new MutationObserver((mutations) => {
       if (!child.disabled) {
-        finish();
+        finish("ready");
         return;
       }
 
@@ -81,7 +94,7 @@ export function fillParentThenWaitChild(
             (mutation.type === "attributes" && mutation.target !== child),
         )
       ) {
-        finish();
+        finish("ready");
       }
     });
 
@@ -92,7 +105,7 @@ export function fillParentThenWaitChild(
       characterData: true,
       subtree: true,
     });
-    const timeoutId = setTimeout(finish, timeoutMs);
+    const timeoutId = setTimeout(() => finish("timeout"), timeoutMs);
 
     // Start observing before dispatching so a synchronous page listener cannot
     // update the child between filling the parent and registering the observer.
@@ -108,15 +121,25 @@ export function fillParentThenWaitChild(
 export async function fillCascadingSelectChain(
   steps: readonly CascadingSelectStep[],
   timeoutMs = CASCADE_CHILD_WAIT_TIMEOUT_MS,
-): Promise<void> {
+): Promise<CascadingSelectChainResult[]> {
+  const results: CascadingSelectChainResult[] = [];
   for (const [index, step] of steps.entries()) {
     const child = steps[index + 1]?.select;
     if (child) {
-      await fillParentThenWaitChild(step.select, step.value, child, timeoutMs);
+      const waitResult = await fillParentThenWaitChild(step.select, step.value, child, timeoutMs);
+      results.push({ step, status: "filled" });
+      if (waitResult === "timeout") {
+        const timedOutStep = steps[index + 1];
+        if (timedOutStep.detectedField) timedOutStep.detectedField.status = "cascade_timeout";
+        results.push({ step: timedOutStep, status: "cascade_timeout" });
+        break;
+      }
     } else {
       setNativeSelectValue(step.select, step.value);
+      results.push({ step, status: "filled" });
     }
   }
+  return results;
 }
 
 /** Extracts every option from a native select, including options in optgroups. */

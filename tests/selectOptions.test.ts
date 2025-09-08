@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { DetectedField } from "../src/shared/types";
 
 import {
   fillCascadingSelectChain,
@@ -160,8 +161,37 @@ describe("extractOptions", () => {
     const province = document.querySelector<HTMLSelectElement>("#province")!;
     const ward = document.querySelector<HTMLSelectElement>("#ward")!;
 
-    await expect(fillParentThenWaitChild(province, "79", ward, 1)).resolves.toBeUndefined();
+    await expect(fillParentThenWaitChild(province, "79", ward, 1)).resolves.toBe("timeout");
     expect(ward.disabled).toBe(true);
+  });
+
+  it("stops a cascade at the child that timed out instead of attempting later levels", async () => {
+    document.body.innerHTML = `
+      <select id="province"><option value="79">Hồ Chí Minh</option></select>
+      <select id="district" disabled><option value="">-- Chọn quận/huyện --</option></select>
+      <select id="ward" disabled><option value="">-- Chọn xã --</option><option value="26734">Phường Bến Nghé</option></select>
+    `;
+    const [province, district, ward] = Array.from(document.querySelectorAll<HTMLSelectElement>("select"));
+    const districtField = {
+      candidateType: "UNKNOWN",
+      confidence: 100,
+      signals: { labelText: "Quận/Huyện" },
+      status: "pending",
+    } as DetectedField;
+
+    const results = await fillCascadingSelectChain(
+      [
+        { select: province, value: "79" },
+        { select: district, value: "760", detectedField: districtField },
+        { select: ward, value: "26734" },
+      ],
+      1,
+    );
+
+    expect(results.map(({ status }) => status)).toEqual(["filled", "cascade_timeout"]);
+    expect(districtField.status).toBe("cascade_timeout");
+    expect(ward.value).toBe("");
+    expect(district.value).toBe("");
   });
 
   it("matches a profile value to an option by normalized visible text", () => {
