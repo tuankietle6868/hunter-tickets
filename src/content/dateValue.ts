@@ -58,6 +58,18 @@ export function fillSeparateDateSelects(value: string, selects: SeparateDateSele
 }
 
 /**
+ * Fills a standalone birth-year select. Unlike the three-part variant, this
+ * intentionally has no day or month dependency.
+ */
+export function fillBirthYearSelect(value: string, yearSelect: HTMLSelectElement): boolean {
+  const year = parseDate(value)?.year ?? (/^\d{4}$/.test(value.trim()) ? Number(value.trim()) : undefined);
+  if (!year) return false;
+
+  setDateSelectValue(yearSelect, [String(year)]);
+  return true;
+}
+
+/**
  * Converts a stored birthday into the format accepted by a native date input
  * or a text date field such as Google Forms' `dd/mm/yyyy` control.
  */

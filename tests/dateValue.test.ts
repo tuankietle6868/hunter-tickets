@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { fillSeparateDateSelects } from "../src/content/dateValue";
+import { fillBirthYearSelect, fillSeparateDateSelects } from "../src/content/dateValue";
 
 describe("fillSeparateDateSelects", () => {
   afterEach(() => document.body.replaceChildren());
@@ -25,5 +25,18 @@ describe("fillSeparateDateSelects", () => {
 
     expect([day.value, month.value, year.value]).toEqual(["7", "10", "1999"]);
     expect(changes).toEqual(["day", "month", "year"]);
+  });
+
+  it("fills a standalone Năm sinh select without requiring Ngày or Tháng fields", () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="birth-year">Năm sinh</label>
+        <select id="birth-year"><option value="">Năm</option><option value="1999">1999</option></select>
+      </form>
+    `;
+    const year = document.querySelector<HTMLSelectElement>("#birth-year")!;
+
+    expect(() => fillBirthYearSelect("1999-10-07", year)).not.toThrow();
+    expect(year.value).toBe("1999");
   });
 });
