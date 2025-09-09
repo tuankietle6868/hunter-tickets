@@ -30,6 +30,18 @@ function parseDate(value: string): DateParts | undefined {
     : undefined;
 }
 
+/** Converts supported date strings to their unambiguous ISO calendar value. */
+export function canonicalizeDateValue(value: string): string | undefined {
+  const parts = parseDate(value);
+  return parts ? `${parts.year}-${pad(parts.month)}-${pad(parts.day)}` : undefined;
+}
+
+/** Reads a four-digit birth year from a full date or a standalone year value. */
+export function extractBirthYear(value: string): string | undefined {
+  const year = parseDate(value)?.year ?? (/^\d{4}$/.test(value.trim()) ? Number(value.trim()) : undefined);
+  return year ? String(year) : undefined;
+}
+
 function pad(value: number): string {
   return String(value).padStart(2, "0");
 }
@@ -94,10 +106,10 @@ export function fillSeparateDateSelects(value: string, selects: SeparateDateSele
  * intentionally has no day or month dependency.
  */
 export function fillBirthYearSelect(value: string, yearSelect: HTMLSelectElement): boolean {
-  const year = parseDate(value)?.year ?? (/^\d{4}$/.test(value.trim()) ? Number(value.trim()) : undefined);
+  const year = extractBirthYear(value);
   if (!year) return false;
 
-  setDateSelectValue(yearSelect, [String(year)]);
+  setDateSelectValue(yearSelect, [year]);
   return true;
 }
 
