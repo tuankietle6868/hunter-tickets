@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { fillBirthYearSelect, fillSeparateDateSelects } from "../src/content/dateValue";
+import {
+  fillBirthYearSelect,
+  fillSeparateDateSelects,
+  formatValueForInput,
+} from "../src/content/dateValue";
 
 describe("fillSeparateDateSelects", () => {
   afterEach(() => document.body.replaceChildren());
@@ -38,5 +42,28 @@ describe("fillSeparateDateSelects", () => {
 
     expect(() => fillBirthYearSelect("1999-10-07", year)).not.toThrow();
     expect(year.value).toBe("1999");
+  });
+
+  it.each([
+    ["dd/mm/yyyy", undefined, "12/05/2000"],
+    [undefined, "\\d{2}-\\d{2}-\\d{4}", "12-05-2000"],
+    ["yyyy-mm-dd", undefined, "2000-05-12"],
+  ])(
+    "formats a free-text date only for the layout declared by placeholder or pattern",
+    (placeholder, pattern, expected) => {
+      const input = document.createElement("input");
+      input.type = "text";
+      if (placeholder) input.placeholder = placeholder;
+      if (pattern) input.pattern = pattern;
+
+      expect(formatValueForInput("2000-05-12", "DATE_OF_BIRTH", input)).toBe(expected);
+    },
+  );
+
+  it("does not guess a free-text date layout when the form declares none", () => {
+    const input = document.createElement("input");
+    input.type = "text";
+
+    expect(formatValueForInput("2000-05-12", "DATE_OF_BIRTH", input)).toBe("2000-05-12");
   });
 });

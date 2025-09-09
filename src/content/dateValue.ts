@@ -42,6 +42,38 @@ function setDateSelectValue(select: HTMLSelectElement, values: readonly string[]
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+type TextDateFormat = "dmy-slash" | "dmy-dash" | "dmy-dot" | "ymd-dash" | "ymd-slash";
+
+function detectTextDateFormat(input: HTMLElement): TextDateFormat | undefined {
+  const hints = [
+    input.getAttribute("placeholder"),
+    input.getAttribute("aria-label"),
+    input.getAttribute("pattern"),
+  ]
+    .filter((hint): hint is string => Boolean(hint))
+    .join(" ")
+    .toLowerCase()
+    .replace(/\\/g, "")
+    .replace(/\s+/g, "");
+
+  if (/(?:dd|d)[/](?:mm|m)[/]yyyy|d\{2\}\/d\{2\}\/d\{4\}/.test(hints)) {
+    return "dmy-slash";
+  }
+  if (/(?:dd|d)-(?:mm|m)-yyyy|d\{2\}-d\{2\}-d\{4\}/.test(hints)) {
+    return "dmy-dash";
+  }
+  if (/(?:dd|d)\.(?:mm|m)\.yyyy|d\{2\}\.d\{2\}\.d\{4\}/.test(hints)) {
+    return "dmy-dot";
+  }
+  if (/yyyy-(?:mm|m)-(?:dd|d)|d\{4\}-d\{2\}-d\{2\}/.test(hints)) {
+    return "ymd-dash";
+  }
+  if (/yyyy\/(?:mm|m)\/(?:dd|d)|d\{4\}\/d\{2\}\/d\{2\}/.test(hints)) {
+    return "ymd-slash";
+  }
+  return undefined;
+}
+
 /**
  * Fills independent day, month, and year selects from one stored date. These
  * controls are not a cascade, so each value is applied immediately with no
@@ -86,15 +118,20 @@ export function formatValueForInput(
   const iso = `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`;
   if (input instanceof HTMLInputElement && input.type === "date") return iso;
 
-  const dateHint = [input.getAttribute("placeholder"), input.getAttribute("aria-label")]
-    .filter((hint): hint is string => Boolean(hint))
-    .join(" ")
-    .toLowerCase();
-  if (/mm\s*[-/.]\s*dd\s*[-/.]\s*yyyy/.test(dateHint)) {
-    return `${pad(parts.month)}/${pad(parts.day)}/${parts.year}`;
+  switch (detectTextDateFormat(input)) {
+    case "dmy-slash":
+      return `${pad(parts.day)}/${pad(parts.month)}/${parts.year}`;
+    case "dmy-dash":
+      return `${pad(parts.day)}-${pad(parts.month)}-${parts.year}`;
+    case "dmy-dot":
+      return `${pad(parts.day)}.${pad(parts.month)}.${parts.year}`;
+    case "ymd-slash":
+      return `${parts.year}/${pad(parts.month)}/${pad(parts.day)}`;
+    case "ymd-dash":
+      return iso;
+    default:
+      // There is no declared layout, so retaining the stored ISO value is the
+      // only safe choice; do not guess a locale-specific text representation.
+      return value;
   }
-  if (/yyyy\s*[-/.]\s*mm\s*[-/.]\s*dd/.test(dateHint)) return iso;
-
-  // Vietnamese forms commonly use a text input with `dd/mm/yyyy` as hint.
-  return `${pad(parts.day)}/${pad(parts.month)}/${parts.year}`;
 }
