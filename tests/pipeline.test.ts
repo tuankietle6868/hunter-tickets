@@ -52,6 +52,30 @@ describe("generic autofill pipeline", () => {
     expect(results.map(({ status }) => status)).toEqual(["filled", "filled"]);
   });
 
+  it("fills every native DOB variant without treating separate selects as a cascade", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label>Ngày sinh <input id="native" type="date" /></label>
+        <fieldset><legend>Ngày sinh</legend>
+          <select id="day" name="birth-day"><option value="12">12</option></select>
+          <select id="month" name="birth-month"><option value="5">5</option></select>
+          <select id="year" name="birth-year"><option value="2000">2000</option></select>
+        </fieldset>
+        <label>Năm sinh <select id="standalone-year" name="standalone-birth-year"><option value="2000">2000</option></select></label>
+        <label>Ngày sinh <input id="text-date" type="text" placeholder="dd/mm/yyyy" /></label>
+      </form>
+    `;
+
+    await runGenericAutofill({ dateOfBirth: "2000-05-12" });
+
+    expect((document.querySelector("#native") as HTMLInputElement).value).toBe("2000-05-12");
+    expect((document.querySelector("#day") as HTMLSelectElement).value).toBe("12");
+    expect((document.querySelector("#month") as HTMLSelectElement).value).toBe("5");
+    expect((document.querySelector("#year") as HTMLSelectElement).value).toBe("2000");
+    expect((document.querySelector("#standalone-year") as HTMLSelectElement).value).toBe("2000");
+    expect((document.querySelector("#text-date") as HTMLInputElement).value).toBe("12/05/2000");
+  });
+
   it("fills gender fields presented as text or a standard radio group", async () => {
     document.body.innerHTML = `
       <form>
