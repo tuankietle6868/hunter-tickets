@@ -56,6 +56,21 @@ describe("GenericHtmlAdapter.getQuestionText", () => {
     expect(adapter.findInput(questions[0])?.getAttribute("value")).toBe("male");
   });
 
+  it("groups a two-option radio question by its shared name", () => {
+    document.body.innerHTML = `
+      <fieldset>
+        <legend>Hình thức tham dự</legend>
+        <label><input type="radio" name="attendance" value="online" /> Trực tuyến</label>
+        <label><input type="radio" name="attendance" value="offline" /> Trực tiếp</label>
+      </fieldset>
+    `;
+
+    const questions = new GenericHtmlAdapter().findQuestions();
+
+    expect(questions).toHaveLength(1);
+    expect(questions[0].getAttribute("name")).toBe("attendance");
+  });
+
   it("does not merge same-named radio questions from separate forms", () => {
     document.body.innerHTML = `
       <form><fieldset><legend>Giới tính</legend><input type="radio" name="gender" /></fieldset></form>

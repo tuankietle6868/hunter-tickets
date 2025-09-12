@@ -58,12 +58,13 @@ function isMatchingRadioOption(input: HTMLInputElement, value: string): boolean 
 function radioGroupInputs(input: HTMLInputElement): HTMLInputElement[] {
   const container = input.closest("fieldset, [role='radiogroup']");
   const allRadios = Array.from(
-    (container ?? input.ownerDocument).querySelectorAll<HTMLInputElement>(RADIO_SELECTOR),
+    (input.form ?? container ?? input.ownerDocument).querySelectorAll<HTMLInputElement>(RADIO_SELECTOR),
   );
 
   if (!input.name) return container ? allRadios : [input];
-  // HTML groups radios by name within the same form owner. Keeping that scope
-  // prevents same-named questions in separate forms from being merged.
+  // HTML groups radios by name within the same form owner. The fieldset only
+  // supplies scope for unnamed radios; it must not merge differently named
+  // questions that happen to share a visual container.
   return allRadios.filter((option) => option.name === input.name && option.form === input.form);
 }
 
