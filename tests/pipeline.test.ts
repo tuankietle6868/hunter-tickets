@@ -83,9 +83,9 @@ describe("generic autofill pipeline", () => {
         <input id="gender-text" type="text" />
         <fieldset>
           <legend>Giới tính</legend>
-          <label><input type="radio" name="gender" value="male" /> Nam</label>
-          <label><input type="radio" name="gender" value="female" /> Nữ</label>
-          <label><input type="radio" name="gender" value="other" /> Khác</label>
+          <label><input id="gender-male" type="radio" name="gender" value="choice-a" /> Nam</label>
+          <label><input id="gender-female" type="radio" name="gender" value="choice-b" /> Nữ</label>
+          <label><input id="gender-other" type="radio" name="gender" value="choice-c" /> Khác</label>
         </fieldset>
       </form>
     `;
@@ -93,7 +93,7 @@ describe("generic autofill pipeline", () => {
     const results = await runGenericAutofill({ gender: "Nữ" });
 
     expect((document.querySelector("#gender-text") as HTMLInputElement).value).toBe("Nữ");
-    expect((document.querySelector('[value="female"]') as HTMLInputElement).checked).toBe(true);
+    expect((document.querySelector("#gender-female") as HTMLInputElement).checked).toBe(true);
     expect(results.map(({ candidateType, status }) => ({ candidateType, status }))).toEqual([
       { candidateType: "GENDER", status: "filled" },
       { candidateType: "GENDER", status: "filled" },
