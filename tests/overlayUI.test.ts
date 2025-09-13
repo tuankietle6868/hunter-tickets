@@ -80,6 +80,37 @@ describe("Autofill overlay", () => {
     expect(text).toContain("đang chờ / không tự chọn được — vui lòng chọn tay");
   });
 
+  it("renders separate explanations for policy, ambiguity, and low confidence", () => {
+    const results = [
+      {
+        candidateType: "UNKNOWN",
+        confidence: 100,
+        signals: { labelText: "Điều khoản" },
+        status: "policy_blocked",
+      },
+      {
+        candidateType: "FULL_NAME",
+        confidence: 90,
+        signals: { labelText: "Tên" },
+        status: "ambiguous",
+      },
+      {
+        candidateType: "EMAIL",
+        confidence: 60,
+        signals: { labelText: "Email phụ" },
+        status: "low_confidence",
+      },
+    ] as DetectedField[];
+
+    showAutofillOverlay(results);
+
+    const text = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot?.textContent;
+    expect(text).toContain("Skipped: policy");
+    expect(text).toContain("Skipped: ambiguous");
+    expect(text).toContain("Skipped: low confidence");
+    expect(text).not.toContain("○ Not found");
+  });
+
   it("runs the supplied scan and refill actions from the overlay buttons", () => {
     const onRescan = vi.fn();
     const onRefill = vi.fn();

@@ -76,5 +76,6 @@ export interface DetectedField {
     | "verify_failed"
     | "cascade_timeout"
     | "policy_blocked"
-    | "ambiguous";
+    | "ambiguous"
+    | "low_confidence";
 }

@@ -158,13 +158,18 @@ export async function runGenericAutofill(
         }
       }
 
-      if (
-        !input ||
-        match.confidence < AUTO_FILL_CONFIDENCE ||
-        !value ||
-        !isAutoFillPermitted(match.type, controlType)
-      ) {
+      if (!input || !value) {
         detectedField.status = "skipped";
+        return detectedField;
+      }
+
+      if (match.confidence < AUTO_FILL_CONFIDENCE) {
+        detectedField.status = "low_confidence";
+        return detectedField;
+      }
+
+      if (!isAutoFillPermitted(match.type, controlType)) {
+        detectedField.status = "policy_blocked";
         return detectedField;
       }
 

@@ -108,7 +108,7 @@ describe("generic autofill pipeline", () => {
     expect((document.querySelector("#gender-text") as HTMLInputElement).value).toBe("");
     expect((document.querySelector("#gender-female") as HTMLInputElement).checked).toBe(true);
     expect(results.map(({ candidateType, status }) => ({ candidateType, status }))).toEqual([
-      { candidateType: "GENDER", status: "skipped" },
+      { candidateType: "GENDER", status: "policy_blocked" },
       { candidateType: "GENDER", status: "filled" },
     ]);
   });
