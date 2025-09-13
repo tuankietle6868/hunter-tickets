@@ -135,6 +135,11 @@ export async function runGenericAutofill(
         return detectedField;
       }
 
+      if (match.ambiguous) {
+        detectedField.status = "ambiguous";
+        return detectedField;
+      }
+
       if (
         input instanceof HTMLSelectElement &&
         profile.dateOfBirth &&

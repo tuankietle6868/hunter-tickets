@@ -38,6 +38,21 @@ describe("scoreField", () => {
         placeholder: "Nhập số điện thoại",
         autocomplete: "tel",
       }),
-    ).toEqual({ type: "PHONE", confidence: 100 });
+    ).toMatchObject({ type: "PHONE", confidence: 100, ambiguous: false });
+  });
+
+  it("marks both close candidates ambiguous when Tên conflicts with Tên công ty", () => {
+    const result = scoreField({
+      visibleQuestionText: "Tên",
+      labelText: "Tên công ty",
+    });
+
+    expect(result).toMatchObject({
+      type: "COMPANY_NAME",
+      runnerUpType: "FULL_NAME",
+      ambiguous: true,
+    });
+    expect(result.candidateGap).toBeLessThan(15);
+    expect(result.ambiguousTypes).toEqual(["COMPANY_NAME", "FULL_NAME"]);
   });
 });

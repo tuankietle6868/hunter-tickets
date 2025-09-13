@@ -26,6 +26,7 @@ const SCORABLE_FIELD_TYPES: FieldType[] = [
   "PROVINCE",
   "WARD",
   "DISTRICT_LEGACY",
+  "COMPANY_NAME",
 ];
 
 function matchesAlias(value: string, alias: AliasEntry): boolean {
@@ -64,6 +65,10 @@ export function bestAliasMatch(
 export function scoreField(signals: FieldSignals): {
   type: FieldType;
   confidence: number;
+  runnerUpType?: FieldType;
+  candidateGap?: number;
+  ambiguous: boolean;
+  ambiguousTypes: FieldType[];
 } {
   const scoresByType: Record<FieldType, number> = {
     FULL_NAME: 0,
@@ -76,6 +81,7 @@ export function scoreField(signals: FieldSignals): {
     PROVINCE: 0,
     WARD: 0,
     DISTRICT_LEGACY: 0,
+    COMPANY_NAME: 0,
     UNKNOWN: 0,
   };
 
@@ -110,18 +116,20 @@ export function scoreField(signals: FieldSignals): {
     }
   }
 
-  let bestType: FieldType = "UNKNOWN";
-  let bestScore = 0;
-
-  for (const fieldType of SCORABLE_FIELD_TYPES) {
-    if (scoresByType[fieldType] > bestScore) {
-      bestType = fieldType;
-      bestScore = scoresByType[fieldType];
-    }
-  }
+  const ranked = SCORABLE_FIELD_TYPES.map((type) => ({ type, score: scoresByType[type] })).sort(
+    (left, right) => right.score - left.score,
+  );
+  const best = ranked[0];
+  const runnerUp = ranked.find((candidate) => candidate.type !== best.type && candidate.score > 0);
+  const candidateGap = runnerUp ? best.score - runnerUp.score : undefined;
+  const ambiguous = candidateGap !== undefined && candidateGap < 15;
 
   return {
-    type: bestType,
-    confidence: Math.min(100, bestScore),
+    type: best.score > 0 ? best.type : "UNKNOWN",
+    confidence: Math.min(100, best.score),
+    runnerUpType: runnerUp?.type,
+    candidateGap,
+    ambiguous,
+    ambiguousTypes: ambiguous && runnerUp ? [best.type, runnerUp.type] : [],
   };
 }

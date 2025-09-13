@@ -10,6 +10,7 @@ export type FieldType =
   | "PROVINCE"
   | "WARD"
   | "DISTRICT_LEGACY"
+  | "COMPANY_NAME"
   | "UNKNOWN";
 
 /** The DOM control category used to select safe fill and verify strategies. */
@@ -74,5 +75,6 @@ export interface DetectedField {
     | "skipped"
     | "verify_failed"
     | "cascade_timeout"
-    | "policy_blocked";
+    | "policy_blocked"
+    | "ambiguous";
 }

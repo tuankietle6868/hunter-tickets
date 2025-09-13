@@ -35,6 +35,7 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
     exact("ten day du", 100),
     exact("hoten", 95),
     exact("fullname", 95),
+    exact("ten", 85),
   ],
   PHONE: [
     exact("so dien thoai", 100),
@@ -107,6 +108,10 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
     exact("huyen", 85),
     contains("district", 90),
   ],
+  COMPANY_NAME: [
+    contains("ten cong ty", 100),
+    contains("company name", 100),
+  ],
   UNKNOWN: [],
 };
 
@@ -134,6 +139,7 @@ export const NEGATIVE_PATTERNS: Record<FieldType, string[]> = {
   PROVINCE: [],
   WARD: [],
   DISTRICT_LEGACY: [],
+  COMPANY_NAME: [],
   UNKNOWN: [],
 };
 

@@ -32,6 +32,7 @@ const FIELD_LABELS: Record<FieldType, string> = {
   PROVINCE: "Tỉnh/Thành phố",
   WARD: "Phường/Xã",
   DISTRICT_LEGACY: "Quận/Huyện",
+  COMPANY_NAME: "Tên công ty",
   UNKNOWN: "Trường chưa nhận diện",
 };
 
@@ -63,6 +64,8 @@ function renderFieldRow(field: DetectedField, index: number, selectable: boolean
       ? `<span class="field-status is-review">! Check ${confidence}%</span>`
       : field.status === "policy_blocked"
         ? `<span class="field-status is-review">Không tự điền (policy an toàn)</span>`
+        : field.status === "ambiguous"
+          ? `<span class="field-status is-review">Cần chọn tay (nhận diện mơ hồ)</span>`
       : field.status === "cascade_timeout"
         ? `<span class="field-status is-review">đang chờ / không tự chọn được — vui lòng chọn tay</span>`
       : `<span class="field-status">○ Not found</span>`;
@@ -171,8 +174,11 @@ export function showAutofillOverlay(
   const needsReview = results.filter(({ status }) => status === "verify_failed").length;
   const cascadeTimeouts = results.filter(({ status }) => status === "cascade_timeout").length;
   const policyBlocked = results.filter(({ status }) => status === "policy_blocked").length;
+  const ambiguous = results.filter(({ status }) => status === "ambiguous").length;
   const message = policyBlocked
     ? `Đã điền ${filled} trường. Có ${policyBlocked} trường bị chặn bởi policy an toàn.`
+    : ambiguous
+      ? `Đã điền ${filled} trường. Có ${ambiguous} trường nhận diện mơ hồ, vui lòng chọn tay.`
     : cascadeTimeouts
     ? `Đã điền ${filled} trường. Có ${cascadeTimeouts} trường không tự chọn được — vui lòng chọn tay.`
     : needsReview
