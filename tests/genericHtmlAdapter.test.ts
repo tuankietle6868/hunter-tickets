@@ -71,6 +71,23 @@ describe("GenericHtmlAdapter.getQuestionText", () => {
     expect(questions[0].getAttribute("name")).toBe("attendance");
   });
 
+  it("verifies the selected radio option by its visible label", () => {
+    document.body.innerHTML = `
+      <fieldset>
+        <legend>Giới tính</legend>
+        <label><input type="radio" name="gender" value="choice-a" /> Nam</label>
+        <label><input type="radio" name="gender" value="choice-b" /> Nữ</label>
+      </fieldset>
+    `;
+    const adapter = new GenericHtmlAdapter();
+    const firstRadio = document.querySelector<HTMLInputElement>('input[value="choice-a"]')!;
+
+    adapter.setValue(firstRadio, "Nữ");
+
+    expect(adapter.verifyValue(firstRadio, "Nữ")).toBe(true);
+    expect(adapter.verifyValue(firstRadio, "Nam")).toBe(false);
+  });
+
   it("does not merge same-named radio questions from separate forms", () => {
     document.body.innerHTML = `
       <form><fieldset><legend>Giới tính</legend><input type="radio" name="gender" /></fieldset></form>
