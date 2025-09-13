@@ -61,6 +61,8 @@ function renderFieldRow(field: DetectedField, index: number, selectable: boolean
     ? `<span class="field-status is-matched">✓ Matched ${confidence}%</span>`
     : field.status === "verify_failed"
       ? `<span class="field-status is-review">! Check ${confidence}%</span>`
+      : field.status === "policy_blocked"
+        ? `<span class="field-status is-review">Không tự điền (policy an toàn)</span>`
       : field.status === "cascade_timeout"
         ? `<span class="field-status is-review">đang chờ / không tự chọn được — vui lòng chọn tay</span>`
       : `<span class="field-status">○ Not found</span>`;
@@ -168,7 +170,10 @@ export function showAutofillOverlay(
   const filled = results.filter(({ status }) => status === "filled").length;
   const needsReview = results.filter(({ status }) => status === "verify_failed").length;
   const cascadeTimeouts = results.filter(({ status }) => status === "cascade_timeout").length;
-  const message = cascadeTimeouts
+  const policyBlocked = results.filter(({ status }) => status === "policy_blocked").length;
+  const message = policyBlocked
+    ? `Đã điền ${filled} trường. Có ${policyBlocked} trường bị chặn bởi policy an toàn.`
+    : cascadeTimeouts
     ? `Đã điền ${filled} trường. Có ${cascadeTimeouts} trường không tự chọn được — vui lòng chọn tay.`
     : needsReview
     ? `Đã điền ${filled} trường. Có ${needsReview} trường cần kiểm tra lại.`

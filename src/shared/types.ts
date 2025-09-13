@@ -68,5 +68,11 @@ export interface DetectedField {
   candidateType: FieldType;
   /** Match confidence on a 0–100 scale. */
   confidence: number;
-  status: "pending" | "filled" | "skipped" | "verify_failed" | "cascade_timeout";
+  status:
+    | "pending"
+    | "filled"
+    | "skipped"
+    | "verify_failed"
+    | "cascade_timeout"
+    | "policy_blocked";
 }

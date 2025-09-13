@@ -76,6 +76,19 @@ describe("generic autofill pipeline", () => {
     expect((document.querySelector("#text-date") as HTMLInputElement).value).toBe("12/05/2000");
   });
 
+  it("never auto-ticks a terms checkbox, regardless of matching confidence", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label>Tôi đồng ý điều khoản <input id="terms" type="checkbox" name="terms" /></label>
+      </form>
+    `;
+
+    const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
+
+    expect((document.querySelector("#terms") as HTMLInputElement).checked).toBe(false);
+    expect(results).toMatchObject([{ status: "policy_blocked" }]);
+  });
+
   it("fills gender only for a standard radio group, as required by policy", async () => {
     document.body.innerHTML = `
       <form>

@@ -7,7 +7,7 @@ import {
   fillSeparateDateSelects,
   formatValueForInput,
 } from "./dateValue";
-import { isAutoFillPermitted } from "./policy";
+import { isAutoFillPermitted, isHardPolicyBlocked } from "./policy";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -129,6 +129,11 @@ export async function runGenericAutofill(
         status: "pending",
       };
       const value = getProfileValue(profile, match.type);
+
+      if (isHardPolicyBlocked(signals)) {
+        detectedField.status = "policy_blocked";
+        return detectedField;
+      }
 
       if (
         input instanceof HTMLSelectElement &&
