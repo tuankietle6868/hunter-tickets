@@ -8,6 +8,7 @@ import {
   formatValueForInput,
 } from "./dateValue";
 import { isAutoFillPermitted, isHardPolicyBlocked } from "./policy";
+import { isCssHidden, scrollIntoViewIfOffscreen } from "./visibility";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -130,6 +131,11 @@ export async function runGenericAutofill(
       };
       const value = getProfileValue(profile, match.type);
 
+      if (isCssHidden(input ?? question)) {
+        detectedField.status = "skipped";
+        return detectedField;
+      }
+
       if (isHardPolicyBlocked(signals)) {
         detectedField.status = "policy_blocked";
         return detectedField;
@@ -175,6 +181,7 @@ export async function runGenericAutofill(
 
       const formattedValue = formatValueForInput(value, match.type, input);
       adapter.setValue(input, formattedValue);
+      scrollIntoViewIfOffscreen(input);
       detectedField.status = (await adapter.verifyValue(input, formattedValue))
         ? "filled"
         : "verify_failed";
