@@ -90,6 +90,23 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
     contains("dia chi hien tai", 95),
     exact("noi o", 85),
   ],
+  PROVINCE: [
+    contains("tinh thanh", 100),
+    exact("tinh", 90),
+    contains("province", 90),
+  ],
+  WARD: [
+    contains("phuong xa", 100),
+    exact("phuong", 85),
+    exact("xa", 85),
+    contains("ward", 90),
+  ],
+  DISTRICT_LEGACY: [
+    contains("quan huyen", 100),
+    exact("quan", 85),
+    exact("huyen", 85),
+    contains("district", 90),
+  ],
   UNKNOWN: [],
 };
 
@@ -114,6 +131,9 @@ export const NEGATIVE_PATTERNS: Record<FieldType, string[]> = {
   DATE_OF_BIRTH: ["ngay cap", "ngay het han", "ngay dang ky"],
   GENDER: [],
   ADDRESS: ["dia chi giao hang", "dia chi nhan hang", "dia chi cong ty"],
+  PROVINCE: [],
+  WARD: [],
+  DISTRICT_LEGACY: [],
   UNKNOWN: [],
 };
 

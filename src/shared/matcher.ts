@@ -23,6 +23,9 @@ const SCORABLE_FIELD_TYPES: FieldType[] = [
   "DATE_OF_BIRTH",
   "ADDRESS",
   "GENDER",
+  "PROVINCE",
+  "WARD",
+  "DISTRICT_LEGACY",
 ];
 
 function matchesAlias(value: string, alias: AliasEntry): boolean {
@@ -70,6 +73,9 @@ export function scoreField(signals: FieldSignals): {
     DATE_OF_BIRTH: 0,
     ADDRESS: 0,
     GENDER: 0,
+    PROVINCE: 0,
+    WARD: 0,
+    DISTRICT_LEGACY: 0,
     UNKNOWN: 0,
   };
 

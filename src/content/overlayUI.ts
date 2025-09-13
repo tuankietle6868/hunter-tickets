@@ -29,6 +29,9 @@ const FIELD_LABELS: Record<FieldType, string> = {
   DATE_OF_BIRTH: "Ngày sinh",
   ADDRESS: "Địa chỉ",
   GENDER: "Giới tính",
+  PROVINCE: "Tỉnh/Thành phố",
+  WARD: "Phường/Xã",
+  DISTRICT_LEGACY: "Quận/Huyện",
   UNKNOWN: "Trường chưa nhận diện",
 };
 

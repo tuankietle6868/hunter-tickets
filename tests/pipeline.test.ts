@@ -76,7 +76,7 @@ describe("generic autofill pipeline", () => {
     expect((document.querySelector("#text-date") as HTMLInputElement).value).toBe("12/05/2000");
   });
 
-  it("fills gender fields presented as text or a standard radio group", async () => {
+  it("fills gender only for a standard radio group, as required by policy", async () => {
     document.body.innerHTML = `
       <form>
         <label for="gender-text">Giới tính</label>
@@ -92,10 +92,10 @@ describe("generic autofill pipeline", () => {
 
     const results = await runGenericAutofill({ gender: "Nữ" });
 
-    expect((document.querySelector("#gender-text") as HTMLInputElement).value).toBe("Nữ");
+    expect((document.querySelector("#gender-text") as HTMLInputElement).value).toBe("");
     expect((document.querySelector("#gender-female") as HTMLInputElement).checked).toBe(true);
     expect(results.map(({ candidateType, status }) => ({ candidateType, status }))).toEqual([
-      { candidateType: "GENDER", status: "filled" },
+      { candidateType: "GENDER", status: "skipped" },
       { candidateType: "GENDER", status: "filled" },
     ]);
   });

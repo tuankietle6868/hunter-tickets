@@ -7,6 +7,7 @@ import {
   fillSeparateDateSelects,
   formatValueForInput,
 } from "./dateValue";
+import { isAutoFillPermitted } from "./policy";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -19,6 +20,9 @@ const PROFILE_KEY_BY_FIELD_TYPE: Partial<Record<FieldType, keyof Profile>> = {
   DATE_OF_BIRTH: "dateOfBirth",
   ADDRESS: "address",
   GENDER: "gender",
+  PROVINCE: "province",
+  WARD: "ward",
+  DISTRICT_LEGACY: "districtLegacy",
 };
 
 function getProfileValue(profile: Profile, fieldType: FieldType): string | undefined {
@@ -113,9 +117,10 @@ export async function runGenericAutofill(
       const input = adapter.findInput(question);
       const signals = adapter.getQuestionText(question);
       const match = scoreField(signals);
+      const controlType = classifyControl(input ?? question);
       const detectedField: DetectedField = {
         elementRef: new WeakRef(input ?? question),
-        controlType: classifyControl(input ?? question),
+        controlType,
         selectMode: getNativeSelectMode(input),
         checkboxMode: getNativeCheckboxMode(input),
         signals,
@@ -125,7 +130,11 @@ export async function runGenericAutofill(
       };
       const value = getProfileValue(profile, match.type);
 
-      if (input instanceof HTMLSelectElement && profile.dateOfBirth) {
+      if (
+        input instanceof HTMLSelectElement &&
+        profile.dateOfBirth &&
+        isAutoFillPermitted("DATE_OF_BIRTH", controlType)
+      ) {
         const didFill = fillNativeBirthDateSelect(
           input,
           profile.dateOfBirth,
@@ -139,7 +148,12 @@ export async function runGenericAutofill(
         }
       }
 
-      if (!input || match.confidence < AUTO_FILL_CONFIDENCE || !value) {
+      if (
+        !input ||
+        match.confidence < AUTO_FILL_CONFIDENCE ||
+        !value ||
+        !isAutoFillPermitted(match.type, controlType)
+      ) {
         detectedField.status = "skipped";
         return detectedField;
       }

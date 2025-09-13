@@ -7,6 +7,9 @@ export type FieldType =
   | "DATE_OF_BIRTH"
   | "ADDRESS"
   | "GENDER"
+  | "PROVINCE"
+  | "WARD"
+  | "DISTRICT_LEGACY"
   | "UNKNOWN";
 
 /** The DOM control category used to select safe fill and verify strategies. */
@@ -36,6 +39,9 @@ export interface Profile {
   dateOfBirth?: string;
   address?: string;
   gender?: string;
+  province?: string;
+  ward?: string;
+  districtLegacy?: string;
 }
 
 /** Textual and semantic hints collected from a form field and its context. */
