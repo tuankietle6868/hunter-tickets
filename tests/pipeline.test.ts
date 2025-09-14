@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { runGenericAutofill } from "../src/content/pipeline";
 
@@ -87,6 +87,32 @@ describe("generic autofill pipeline", () => {
 
     expect((document.querySelector("#terms") as HTMLInputElement).checked).toBe(false);
     expect(results).toMatchObject([{ status: "policy_blocked" }]);
+  });
+
+  it("fills and verifies a valid field below the fold without scrolling it", async () => {
+    document.body.innerHTML = `
+      <form><label>Họ và tên <input id="full-name" type="text" /></label></form>
+    `;
+    const input = document.querySelector<HTMLInputElement>("#full-name")!;
+    const scrollIntoView = vi.fn();
+    input.scrollIntoView = scrollIntoView;
+    Object.defineProperty(input, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        top: window.innerHeight + 100,
+        right: 200,
+        bottom: window.innerHeight + 124,
+        left: 0,
+        width: 200,
+        height: 24,
+      }),
+    });
+
+    const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
+
+    expect(input.value).toBe("Nguyễn Văn An");
+    expect(results[0].status).toBe("filled");
+    expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
   it("fills gender only for a standard radio group, as required by policy", async () => {

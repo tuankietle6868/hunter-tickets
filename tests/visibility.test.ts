@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { isCssHidden, isOffscreen, scrollIntoViewIfOffscreen } from "../src/content/visibility";
+import { isCssHidden, isOffscreen } from "../src/content/visibility";
 
 function setRect(element: HTMLElement, rect: Partial<DOMRect>): void {
   Object.defineProperty(element, "getBoundingClientRect", {
@@ -42,16 +42,12 @@ describe("field visibility", () => {
     expect(isOffscreen(input)).toBe(false);
   });
 
-  it("keeps a normally-sized field below the viewport valid and scrolls it before verify", () => {
+  it("keeps a normally-sized field below the viewport valid", () => {
     const input = document.createElement("input");
-    const scrollIntoView = vi.fn();
-    input.scrollIntoView = scrollIntoView;
     setRect(input, { top: window.innerHeight + 200, bottom: window.innerHeight + 224 });
     document.body.append(input);
 
     expect(isCssHidden(input)).toBe(false);
     expect(isOffscreen(input)).toBe(true);
-    scrollIntoViewIfOffscreen(input);
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "center" });
   });
 });

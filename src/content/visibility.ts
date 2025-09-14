@@ -40,10 +40,3 @@ export function isOffscreen(element: HTMLElement): boolean {
     rect.left > view.innerWidth
   );
 }
-
-/** Brings a valid offscreen field into view immediately before verification. */
-export function scrollIntoViewIfOffscreen(element: HTMLElement): void {
-  if (isOffscreen(element)) {
-    element.scrollIntoView?.({ behavior: "auto", block: "center" });
-  }
-}
