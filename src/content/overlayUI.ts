@@ -72,6 +72,8 @@ function renderFieldRow(field: DetectedField, index: number, selectable: boolean
               ? `<span class="field-status is-review">trùng loại — tự nhập</span>`
               : field.status === "prepopulated_mismatch"
                 ? `<span class="field-status is-review">đã điền nhưng khác profile — kiểm tra lại</span>`
+                : field.status === "format_mismatch"
+                  ? `<span class="field-status is-review">định dạng không khớp</span>`
       : field.status === "cascade_timeout"
         ? `<span class="field-status is-review">đang chờ / không tự chọn được — vui lòng chọn tay</span>`
       : `<span class="field-status">○ Not found</span>`;
@@ -186,6 +188,7 @@ export function showAutofillOverlay(
   const prepopulatedMismatch = results.filter(
     ({ status }) => status === "prepopulated_mismatch",
   ).length;
+  const formatMismatch = results.filter(({ status }) => status === "format_mismatch").length;
   const message = policyBlocked
     ? `Đã điền ${filled} trường. Có ${policyBlocked} trường bị chặn bởi policy an toàn.`
     : ambiguous
@@ -196,6 +199,8 @@ export function showAutofillOverlay(
           ? `Đã điền ${filled} trường. Có ${duplicates} trường trùng loại cần tự nhập.`
           : prepopulatedMismatch
             ? `Đã điền ${filled} trường. Có ${prepopulatedMismatch} trường đã có giá trị khác profile.`
+            : formatMismatch
+              ? `Đã điền ${filled} trường. Có ${formatMismatch} trường có định dạng không khớp.`
     : cascadeTimeouts
     ? `Đã điền ${filled} trường. Có ${cascadeTimeouts} trường không tự chọn được — vui lòng chọn tay.`
     : needsReview

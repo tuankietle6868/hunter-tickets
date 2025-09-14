@@ -96,6 +96,17 @@ describe("generic autofill pipeline", () => {
     expect(results[0].status).toBe("prepopulated_mismatch");
   });
 
+  it("does not truncate a 12-digit CCCD to fit a legacy 9-character CMND field", async () => {
+    document.body.innerHTML = `
+      <form><label>Số CCCD <input id="identity" type="text" maxlength="9" /></label></form>
+    `;
+
+    const results = await runGenericAutofill({ idNumber: "012345678901" });
+
+    expect((document.querySelector("#identity") as HTMLInputElement).value).toBe("");
+    expect(results[0].status).toBe("format_mismatch");
+  });
+
   it("fills native and text date fields with the format each control accepts", async () => {
     document.body.innerHTML = `
       <form>

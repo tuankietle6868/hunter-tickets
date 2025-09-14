@@ -148,6 +148,20 @@ describe("Autofill overlay", () => {
     expect(text).toContain("đã điền nhưng khác profile — kiểm tra lại");
   });
 
+  it("explains when a field's maxlength or pattern rejects the profile format", () => {
+    showAutofillOverlay([
+      {
+        candidateType: "ID_NUMBER",
+        confidence: 100,
+        signals: { labelText: "Số CMND" },
+        status: "format_mismatch",
+      } as DetectedField,
+    ]);
+
+    const text = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot?.textContent;
+    expect(text).toContain("định dạng không khớp");
+  });
+
   it("runs the supplied scan and refill actions from the overlay buttons", () => {
     const onRescan = vi.fn();
     const onRefill = vi.fn();

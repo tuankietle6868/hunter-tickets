@@ -79,5 +79,6 @@ export interface DetectedField {
     | "ambiguous"
     | "low_confidence"
     | "duplicate_manual"
-    | "prepopulated_mismatch";
+    | "prepopulated_mismatch"
+    | "format_mismatch";
 }

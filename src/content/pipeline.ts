@@ -13,6 +13,7 @@ import {
   isProfileConfirmationField,
 } from "./policy";
 import { isCssHidden } from "./visibility";
+import { acceptsFormattedValue } from "./inputConstraints";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -204,6 +205,10 @@ export async function runGenericAutofill(
       const permitsSameValue =
         match.type === "DATE_OF_BIRTH" || isProfileConfirmationField(signals, match.type);
       const formattedValue = formatValueForInput(value, match.type, input);
+      if (!acceptsFormattedValue(input, formattedValue)) {
+        detectedField.status = "format_mismatch";
+        return detectedField;
+      }
       if (hasExistingValue(input)) {
         if (!permitsSameValue) autoFilledFieldTypes.add(match.type);
         detectedField.status = (await adapter.verifyValue(input, formattedValue))
