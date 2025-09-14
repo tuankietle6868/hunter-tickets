@@ -35,6 +35,30 @@ describe("generic autofill pipeline", () => {
     expect(results.map(({ controlType }) => controlType)).toEqual(["INPUT", "INPUT", "INPUT"]);
   });
 
+  it("fills both primary and confirmation Email/SĐT fields with the same profile values", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="email">Email</label><input id="email" type="email" />
+        <label for="email-confirm">Xác nhận Email</label><input id="email-confirm" type="email" />
+        <label for="phone">SĐT</label><input id="phone" type="tel" />
+        <label for="phone-confirm">Nhập lại SĐT</label><input id="phone-confirm" type="tel" />
+      </form>
+    `;
+
+    const results = await runGenericAutofill({
+      email: "an@example.com",
+      phone: "0901234567",
+    });
+
+    expect((document.querySelector("#email") as HTMLInputElement).value).toBe("an@example.com");
+    expect((document.querySelector("#email-confirm") as HTMLInputElement).value).toBe(
+      "an@example.com",
+    );
+    expect((document.querySelector("#phone") as HTMLInputElement).value).toBe("0901234567");
+    expect((document.querySelector("#phone-confirm") as HTMLInputElement).value).toBe("0901234567");
+    expect(results.map(({ status }) => status)).toEqual(["filled", "filled", "filled", "filled"]);
+  });
+
   it("fills native and text date fields with the format each control accepts", async () => {
     document.body.innerHTML = `
       <form>

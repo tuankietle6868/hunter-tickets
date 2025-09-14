@@ -136,7 +136,7 @@ export async function runGenericAutofill(
         return detectedField;
       }
 
-      if (isHardPolicyBlocked(signals)) {
+      if (isHardPolicyBlocked(signals, match.type)) {
         detectedField.status = "policy_blocked";
         return detectedField;
       }

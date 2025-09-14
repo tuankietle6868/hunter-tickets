@@ -38,4 +38,10 @@ describe("autofill policy", () => {
       expect(isHardPolicyBlocked({ labelText: label })).toBe(true);
     },
   );
+
+  it("allows only recognised Email/SĐT confirmation fields through the hard block", () => {
+    expect(isHardPolicyBlocked({ labelText: "Xác nhận Email" }, "EMAIL")).toBe(false);
+    expect(isHardPolicyBlocked({ labelText: "Nhập lại SĐT" }, "PHONE")).toBe(false);
+    expect(isHardPolicyBlocked({ labelText: "Xác nhận thông tin" }, "UNKNOWN")).toBe(true);
+  });
 });

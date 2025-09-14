@@ -48,6 +48,10 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
     contains("phone number", 95),
     exact("tel", 90),
     contains("telephone", 90),
+    contains("xac nhan so dien thoai", 100),
+    contains("nhap lai so dien thoai", 100),
+    contains("nhap lai sdt", 100),
+    contains("confirm phone", 100),
   ],
   ID_NUMBER: [
     exact("cccd", 100),
@@ -67,6 +71,9 @@ export const ALIAS_DICTIONARY: Record<FieldType, AliasEntry[]> = {
     contains("dia chi email", 100),
     contains("thu dien tu", 95),
     exact("mail", 80),
+    contains("xac nhan email", 100),
+    contains("nhap lai email", 100),
+    contains("confirm email", 100),
   ],
   DATE_OF_BIRTH: [
     contains("ngay sinh", 100),

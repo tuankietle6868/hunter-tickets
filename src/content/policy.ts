@@ -32,7 +32,7 @@ const HARD_BLOCKED_LABEL = /dong y|xac nhan|cam ket|dieu khoan|consent|agree/u;
  * Detects consent and acknowledgement controls which must never be populated.
  * This runs before every fill and is therefore independent of confidence.
  */
-export function isHardPolicyBlocked(signals: FieldSignals): boolean {
+export function isHardPolicyBlocked(signals: FieldSignals, fieldType?: FieldType): boolean {
   const label = [
     signals.visibleQuestionText,
     signals.labelText,
@@ -43,5 +43,15 @@ export function isHardPolicyBlocked(signals: FieldSignals): boolean {
   ]
     .filter((value): value is string => Boolean(value))
     .join(" ");
-  return HARD_BLOCKED_LABEL.test(stripDiacritics(normalize(label)));
+  const normalizedLabel = stripDiacritics(normalize(label));
+  // Confirmation copies of Email/SĐT are legitimate registration fields. The
+  // narrow exception is only available after MATCH identifies that field type;
+  // generic acknowledgements remain hard-blocked.
+  if (
+    (fieldType === "EMAIL" || fieldType === "PHONE") &&
+    /xac nhan|nhap lai|confirm/u.test(normalizedLabel)
+  ) {
+    return false;
+  }
+  return HARD_BLOCKED_LABEL.test(normalizedLabel);
 }
