@@ -59,6 +59,21 @@ describe("generic autofill pipeline", () => {
     expect(results.map(({ status }) => status)).toEqual(["filled", "filled", "filled", "filled"]);
   });
 
+  it("fills only the first non-confirmation duplicate field type", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="attendee-one">Họ và tên</label><input id="attendee-one" type="text" />
+        <label for="attendee-two">Họ và tên</label><input id="attendee-two" type="text" />
+      </form>
+    `;
+
+    const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
+
+    expect((document.querySelector("#attendee-one") as HTMLInputElement).value).toBe("Nguyễn Văn An");
+    expect((document.querySelector("#attendee-two") as HTMLInputElement).value).toBe("");
+    expect(results.map(({ status }) => status)).toEqual(["filled", "duplicate_manual"]);
+  });
+
   it("fills native and text date fields with the format each control accepts", async () => {
     document.body.innerHTML = `
       <form>

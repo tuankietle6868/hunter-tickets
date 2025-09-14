@@ -68,6 +68,8 @@ function renderFieldRow(field: DetectedField, index: number, selectable: boolean
           ? `<span class="field-status is-review">Skipped: ambiguous</span>`
           : field.status === "low_confidence"
             ? `<span class="field-status is-review">Skipped: low confidence</span>`
+            : field.status === "duplicate_manual"
+              ? `<span class="field-status is-review">trùng loại — tự nhập</span>`
       : field.status === "cascade_timeout"
         ? `<span class="field-status is-review">đang chờ / không tự chọn được — vui lòng chọn tay</span>`
       : `<span class="field-status">○ Not found</span>`;
@@ -178,12 +180,15 @@ export function showAutofillOverlay(
   const policyBlocked = results.filter(({ status }) => status === "policy_blocked").length;
   const ambiguous = results.filter(({ status }) => status === "ambiguous").length;
   const lowConfidence = results.filter(({ status }) => status === "low_confidence").length;
+  const duplicates = results.filter(({ status }) => status === "duplicate_manual").length;
   const message = policyBlocked
     ? `Đã điền ${filled} trường. Có ${policyBlocked} trường bị chặn bởi policy an toàn.`
     : ambiguous
       ? `Đã điền ${filled} trường. Có ${ambiguous} trường nhận diện mơ hồ, vui lòng chọn tay.`
       : lowConfidence
         ? `Đã điền ${filled} trường. Có ${lowConfidence} trường có confidence thấp.`
+        : duplicates
+          ? `Đã điền ${filled} trường. Có ${duplicates} trường trùng loại cần tự nhập.`
     : cascadeTimeouts
     ? `Đã điền ${filled} trường. Có ${cascadeTimeouts} trường không tự chọn được — vui lòng chọn tay.`
     : needsReview

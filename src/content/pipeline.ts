@@ -7,7 +7,11 @@ import {
   fillSeparateDateSelects,
   formatValueForInput,
 } from "./dateValue";
-import { isAutoFillPermitted, isHardPolicyBlocked } from "./policy";
+import {
+  isAutoFillPermitted,
+  isHardPolicyBlocked,
+  isProfileConfirmationField,
+} from "./policy";
 import { isCssHidden } from "./visibility";
 
 /** Minimum matching confidence required for automatic filling. */
@@ -112,6 +116,7 @@ export async function runGenericAutofill(
   }
 
   const handledBirthDateSelects = new WeakMap<HTMLSelectElement, boolean>();
+  const autoFilledFieldTypes = new Set<FieldType>();
 
   return Promise.all(
     adapter.findQuestions().map(async (question) => {
@@ -177,6 +182,16 @@ export async function runGenericAutofill(
       if (!isAutoFillPermitted(match.type, controlType)) {
         detectedField.status = "policy_blocked";
         return detectedField;
+      }
+
+      const permitsSameValue =
+        match.type === "DATE_OF_BIRTH" || isProfileConfirmationField(signals, match.type);
+      if (autoFilledFieldTypes.has(match.type) && !permitsSameValue) {
+        detectedField.status = "duplicate_manual";
+        return detectedField;
+      }
+      if (!permitsSameValue) {
+        autoFilledFieldTypes.add(match.type);
       }
 
       const formattedValue = formatValueForInput(value, match.type, input);

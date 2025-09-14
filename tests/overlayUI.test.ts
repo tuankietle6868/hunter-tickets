@@ -111,6 +111,29 @@ describe("Autofill overlay", () => {
     expect(text).not.toContain("○ Not found");
   });
 
+  it("distinguishes a filled confirmation field from a duplicate that needs manual input", () => {
+    const results = [
+      {
+        candidateType: "EMAIL",
+        confidence: 100,
+        signals: { labelText: "Xác nhận Email" },
+        status: "filled",
+      },
+      {
+        candidateType: "FULL_NAME",
+        confidence: 100,
+        signals: { labelText: "Họ và tên người thứ hai" },
+        status: "duplicate_manual",
+      },
+    ] as DetectedField[];
+
+    showAutofillOverlay(results);
+
+    const text = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot?.textContent;
+    expect(text).toContain("✓ Matched 100%");
+    expect(text).toContain("trùng loại — tự nhập");
+  });
+
   it("runs the supplied scan and refill actions from the overlay buttons", () => {
     const onRescan = vi.fn();
     const onRefill = vi.fn();

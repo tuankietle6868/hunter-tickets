@@ -77,5 +77,6 @@ export interface DetectedField {
     | "cascade_timeout"
     | "policy_blocked"
     | "ambiguous"
-    | "low_confidence";
+    | "low_confidence"
+    | "duplicate_manual";
 }
