@@ -74,6 +74,28 @@ describe("generic autofill pipeline", () => {
     expect(results.map(({ status }) => status)).toEqual(["filled", "duplicate_manual"]);
   });
 
+  it("keeps an existing value that already matches the profile", async () => {
+    document.body.innerHTML = `
+      <form><label>Họ và tên <input id="full-name" value="Nguyễn Văn An" /></label></form>
+    `;
+
+    const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
+
+    expect((document.querySelector("#full-name") as HTMLInputElement).value).toBe("Nguyễn Văn An");
+    expect(results[0].status).toBe("filled");
+  });
+
+  it("does not overwrite an existing value that differs from the profile", async () => {
+    document.body.innerHTML = `
+      <form><label>Họ và tên <input id="full-name" value="Trần Thị Bình" /></label></form>
+    `;
+
+    const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
+
+    expect((document.querySelector("#full-name") as HTMLInputElement).value).toBe("Trần Thị Bình");
+    expect(results[0].status).toBe("prepopulated_mismatch");
+  });
+
   it("fills native and text date fields with the format each control accepts", async () => {
     document.body.innerHTML = `
       <form>

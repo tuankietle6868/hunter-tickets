@@ -134,6 +134,20 @@ describe("Autofill overlay", () => {
     expect(text).toContain("trùng loại — tự nhập");
   });
 
+  it("warns when a pre-populated value differs from the profile", () => {
+    showAutofillOverlay([
+      {
+        candidateType: "FULL_NAME",
+        confidence: 100,
+        signals: { labelText: "Họ và tên" },
+        status: "prepopulated_mismatch",
+      } as DetectedField,
+    ]);
+
+    const text = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot?.textContent;
+    expect(text).toContain("đã điền nhưng khác profile — kiểm tra lại");
+  });
+
   it("runs the supplied scan and refill actions from the overlay buttons", () => {
     const onRescan = vi.fn();
     const onRefill = vi.fn();

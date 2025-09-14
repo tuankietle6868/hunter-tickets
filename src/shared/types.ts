@@ -78,5 +78,6 @@ export interface DetectedField {
     | "policy_blocked"
     | "ambiguous"
     | "low_confidence"
-    | "duplicate_manual";
+    | "duplicate_manual"
+    | "prepopulated_mismatch";
 }

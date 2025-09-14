@@ -36,6 +36,23 @@ function getProfileValue(profile: Profile, fieldType: FieldType): string | undef
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
+function hasExistingValue(input: HTMLElement): boolean {
+  if (input instanceof HTMLInputElement) {
+    if (input.type === "radio") {
+      if (!input.name) return input.checked;
+      return Array.from(
+        (input.form ?? input.ownerDocument).querySelectorAll<HTMLInputElement>('input[type="radio"]'),
+      ).some((candidate) => candidate.name === input.name && candidate.form === input.form && candidate.checked);
+    }
+    if (input.type === "checkbox") return input.checked;
+    return input.value.trim().length > 0;
+  }
+  if (input instanceof HTMLTextAreaElement || input instanceof HTMLSelectElement) {
+    return input.value.trim().length > 0;
+  }
+  return input.isContentEditable && (input.textContent?.trim().length ?? 0) > 0;
+}
+
 type DateSelectPart = "day" | "month" | "year";
 
 function dateSelectPart(select: HTMLSelectElement): DateSelectPart | undefined {
@@ -186,6 +203,15 @@ export async function runGenericAutofill(
 
       const permitsSameValue =
         match.type === "DATE_OF_BIRTH" || isProfileConfirmationField(signals, match.type);
+      const formattedValue = formatValueForInput(value, match.type, input);
+      if (hasExistingValue(input)) {
+        if (!permitsSameValue) autoFilledFieldTypes.add(match.type);
+        detectedField.status = (await adapter.verifyValue(input, formattedValue))
+          ? "filled"
+          : "prepopulated_mismatch";
+        return detectedField;
+      }
+
       if (autoFilledFieldTypes.has(match.type) && !permitsSameValue) {
         detectedField.status = "duplicate_manual";
         return detectedField;
@@ -194,7 +220,6 @@ export async function runGenericAutofill(
         autoFilledFieldTypes.add(match.type);
       }
 
-      const formattedValue = formatValueForInput(value, match.type, input);
       adapter.setValue(input, formattedValue);
       detectedField.status = (await adapter.verifyValue(input, formattedValue))
         ? "filled"
