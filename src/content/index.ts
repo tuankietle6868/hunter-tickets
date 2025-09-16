@@ -1,7 +1,22 @@
 import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
 import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
+import { findDynamicFieldRoot, observeDynamicFields } from "./dynamicFields";
 import { scrollToAndHighlightField, showAutofillOverlay } from "./overlayUI";
 import { runGenericAutofill } from "./pipeline";
+
+let stopDynamicFieldObserver: (() => void) | undefined;
+let observedDynamicFieldRoot: Element | null = null;
+
+function observeDynamicFieldChanges(): void {
+  const root = findDynamicFieldRoot(document);
+  if (!root || root === observedDynamicFieldRoot) return;
+
+  stopDynamicFieldObserver?.();
+  observedDynamicFieldRoot = root;
+  stopDynamicFieldObserver = observeDynamicFields(root, () => {
+    void runContentScript();
+  });
+}
 
 async function runContentScript(): Promise<void> {
   // Read the per-domain preference before creating any automatic overlay UI.
@@ -21,6 +36,7 @@ async function runContentScript(): Promise<void> {
   }
 
   const results = await runGenericAutofill(profile, googleFormsAdapter);
+  observeDynamicFieldChanges();
   if (overlayAutoEnabled) {
     showAutofillOverlay(results, document, {
       onRescan: runContentScript,
