@@ -54,6 +54,31 @@ function setDateSelectValue(select: HTMLSelectElement, values: readonly string[]
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+function formatPhoneValueForInput(value: string, input: HTMLElement): string {
+  if (!(input instanceof HTMLInputElement) || input.type !== "tel") return value;
+
+  const digits = value.replace(/\D/g, "");
+  const nationalDigits = digits.startsWith("84")
+    ? digits.slice(2)
+    : digits.startsWith("0")
+      ? digits.slice(1)
+      : undefined;
+  if (!nationalDigits || nationalDigits.length !== 9) return value;
+
+  const maxLength = input.getAttribute("maxlength");
+  const declaredFormat = [
+    input.getAttribute("placeholder"),
+    input.getAttribute("aria-label"),
+    input.getAttribute("pattern"),
+  ]
+    .filter((hint): hint is string => Boolean(hint))
+    .join(" ");
+  if (maxLength === "12" || declaredFormat.includes("+84")) return `+84${nationalDigits}`;
+  if (maxLength === "10") return `0${nationalDigits}`;
+
+  return value;
+}
+
 type TextDateFormat = "dmy-slash" | "dmy-dash" | "dmy-dot" | "ymd-dash" | "ymd-slash";
 
 function detectTextDateFormat(input: HTMLElement): TextDateFormat | undefined {
@@ -122,6 +147,7 @@ export function formatValueForInput(
   fieldType: FieldType,
   input: HTMLElement,
 ): string {
+  if (fieldType === "PHONE") return formatPhoneValueForInput(value, input);
   if (fieldType !== "DATE_OF_BIRTH") return value;
 
   const parts = parseDate(value);
