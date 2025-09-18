@@ -14,6 +14,7 @@ import {
 } from "./policy";
 import { isCssHidden } from "./visibility";
 import { acceptsFormattedValue } from "./inputConstraints";
+import { createStableElementLocator, resolveLiveElement } from "./liveElement";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -142,8 +143,10 @@ export async function runGenericAutofill(
       const signals = adapter.getQuestionText(question);
       const match = scoreField(signals);
       const controlType = classifyControl(input ?? question);
+      const stableLocator = createStableElementLocator(input ?? question);
       const detectedField: DetectedField = {
         elementRef: new WeakRef(input ?? question),
+        stableLocator,
         controlType,
         selectMode: getNativeSelectMode(input),
         checkboxMode: getNativeCheckboxMode(input),
@@ -226,7 +229,9 @@ export async function runGenericAutofill(
       }
 
       adapter.setValue(input, formattedValue);
-      detectedField.status = (await adapter.verifyValue(input, formattedValue))
+      const liveInput = resolveLiveElement(stableLocator, input.ownerDocument) ?? input;
+      detectedField.elementRef = new WeakRef(liveInput);
+      detectedField.status = (await adapter.verifyValue(liveInput, formattedValue))
         ? "filled"
         : "verify_failed";
       return detectedField;

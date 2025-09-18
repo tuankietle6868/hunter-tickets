@@ -1,4 +1,5 @@
 import type { DetectedField, FieldType } from "../shared/types";
+import { resolveLiveElement } from "./liveElement";
 
 export const OVERLAY_HOST_ID = "smart-form-autofill-overlay-host";
 export const OVERLAY_PANEL_ID = "smart-form-autofill-overlay";
@@ -222,7 +223,7 @@ export function showAutofillOverlay(
 
 /** Scrolls to the scanned input and applies a short, high-priority highlight. */
 export function scrollToAndHighlightField(field: DetectedField): void {
-  const element = field.elementRef.deref();
+  const element = resolveLiveElement(field.stableLocator) ?? field.elementRef.deref();
   if (!element) return;
 
   element.scrollIntoView?.({ behavior: "smooth", block: "center" });

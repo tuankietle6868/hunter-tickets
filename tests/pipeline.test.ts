@@ -187,6 +187,28 @@ describe("generic autofill pipeline", () => {
     expect(scrollIntoView).not.toHaveBeenCalled();
   });
 
+  it("verifies the replacement node after a React-like field re-render", async () => {
+    document.body.innerHTML = `
+      <form id="form"><label>Họ và tên <input id="full-name" name="fullName" type="text" /></label></form>
+    `;
+    const form = document.querySelector<HTMLFormElement>("#form")!;
+    const original = document.querySelector<HTMLInputElement>("#full-name")!;
+    original.addEventListener("input", () => {
+      const replacement = original.cloneNode() as HTMLInputElement;
+      replacement.value = "Nguyễn Văn An";
+      original.value = "";
+      original.closest("label")?.replaceChildren("Họ và tên ", replacement);
+    });
+
+    const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
+    const current = form.querySelector<HTMLInputElement>("#full-name")!;
+
+    expect(current).not.toBe(original);
+    expect(current.value).toBe("Nguyễn Văn An");
+    expect(results[0].status).toBe("filled");
+    expect(results[0].elementRef.deref()).toBe(current);
+  });
+
   it("fills gender only for a standard radio group, as required by policy", async () => {
     document.body.innerHTML = `
       <form>

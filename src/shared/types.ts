@@ -59,9 +59,17 @@ export interface FieldSignals {
   inputType?: string;
 }
 
+/** A DOM-independent way to resolve a field after a framework re-renders it. */
+export interface StableElementLocator {
+  id?: string;
+  name?: string;
+  tagName: string;
+}
+
 /** A scanned field, its inferred type, and the result of a fill attempt. */
 export interface DetectedField {
   elementRef: WeakRef<HTMLElement>;
+  stableLocator?: StableElementLocator;
   controlType: ControlType;
   selectMode?: SelectMode;
   checkboxMode?: CheckboxMode;
