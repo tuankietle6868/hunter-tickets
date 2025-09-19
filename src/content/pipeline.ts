@@ -15,6 +15,7 @@ import {
 import { isCssHidden } from "./visibility";
 import { acceptsFormattedValue } from "./inputConstraints";
 import { createStableElementLocator, resolveLiveElement } from "./liveElement";
+import { detectedFieldCache, type FieldGroup } from "./fieldCache";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -125,6 +126,37 @@ function fillNativeBirthDateSelect(
   return undefined;
 }
 
+function registerFieldGroups(fields: readonly DetectedField[]): void {
+  const selectFields = fields.flatMap((field) => {
+    const element = field.elementRef.deref();
+    return element instanceof HTMLSelectElement ? [{ field, element }] : [];
+  });
+  const registeredDateSelects = new Set<HTMLSelectElement>();
+
+  for (const { element } of selectFields) {
+    if (registeredDateSelects.has(element) || !isBirthDateSelect(element)) continue;
+    const container = element.closest("fieldset") ?? element.parentElement;
+    const members = Array.from(container?.querySelectorAll<HTMLSelectElement>("select") ?? []).filter(
+      (candidate) => dateSelectPart(candidate) && isBirthDateSelect(candidate),
+    );
+    if (members.length < 2) continue;
+    members.forEach((member) => registeredDateSelects.add(member));
+    detectedFieldCache.registerGroup({ kind: "date_of_birth", elements: members });
+  }
+
+  const cascadeMembers = selectFields
+    .filter(({ field }) =>
+      field.candidateType === "PROVINCE" ||
+      field.candidateType === "DISTRICT_LEGACY" ||
+      field.candidateType === "WARD",
+    )
+    .map(({ element }) => element);
+  if (cascadeMembers.length > 1) {
+    const group: FieldGroup = { kind: "cascade", elements: cascadeMembers };
+    detectedFieldCache.registerGroup(group);
+  }
+}
+
 /** Runs the generic SCAN → MATCH → FILL → VERIFY workflow for this document. */
 export async function runGenericAutofill(
   profile: Profile,
@@ -137,15 +169,16 @@ export async function runGenericAutofill(
   const handledBirthDateSelects = new WeakMap<HTMLSelectElement, boolean>();
   const autoFilledFieldTypes = new Set<FieldType>();
 
-  return Promise.all(
+  const results = await Promise.all(
     adapter.findQuestions().map(async (question) => {
       const input = adapter.findInput(question);
       const signals = adapter.getQuestionText(question);
       const match = scoreField(signals);
       const controlType = classifyControl(input ?? question);
       const stableLocator = createStableElementLocator(input ?? question);
-      const detectedField: DetectedField = {
-        elementRef: new WeakRef(input ?? question),
+      const element = input ?? question;
+      const detectedField = detectedFieldCache.getOrCreate(element, () => ({
+        elementRef: new WeakRef(element),
         stableLocator,
         controlType,
         selectMode: getNativeSelectMode(input),
@@ -154,7 +187,8 @@ export async function runGenericAutofill(
         candidateType: match.type,
         confidence: match.confidence,
         status: "pending",
-      };
+      }));
+      detectedField.status = "pending";
       const value = getProfileValue(profile, match.type);
 
       if (isCssHidden(input ?? question)) {
@@ -237,4 +271,6 @@ export async function runGenericAutofill(
       return detectedField;
     }),
   );
+  registerFieldGroups(results);
+  return results;
 }
