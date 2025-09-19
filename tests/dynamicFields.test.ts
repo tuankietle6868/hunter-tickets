@@ -4,6 +4,24 @@ import { observeDynamicFields } from "../src/content/dynamicFields";
 import { GenericHtmlAdapter } from "../src/content/adapters/genericHtmlAdapter";
 
 describe("dynamic form fields", () => {
+  it("debounces consecutive container mutations into one rescan", async () => {
+    document.body.innerHTML = '<form id="ticket-form"></form>';
+    const form = document.querySelector<HTMLFormElement>("#ticket-form")!;
+    const onRescan = vi.fn();
+    const stop = observeDynamicFields(form, onRescan);
+
+    form.append(new Option("Vé thường", "standard"));
+    await new Promise((resolve) => setTimeout(resolve));
+    form.append(new Option("Vé sinh viên", "student"));
+    await new Promise((resolve) => setTimeout(resolve));
+    form.append(new Option("Vé VIP", "vip"));
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(onRescan).toHaveBeenCalledOnce();
+    stop();
+  });
+
   it("rescans after a selected option renders a new field", async () => {
     document.body.innerHTML = `
       <form id="ticket-form">
