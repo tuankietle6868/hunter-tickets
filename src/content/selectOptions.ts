@@ -1,4 +1,5 @@
 import type { DetectedField } from "../shared/types";
+import { createDebouncedObserver } from "./debouncedObserver";
 
 /** A serialisable snapshot of one native `<option>` element. */
 export interface SelectOption {
@@ -17,13 +18,12 @@ export function waitForNativeSelectEnabled(select: HTMLSelectElement): Promise<v
   if (!select.disabled) return Promise.resolve();
 
   return new Promise((resolve) => {
-    const observer = new MutationObserver(() => {
+    const stopObserver = createDebouncedObserver(select, () => {
       if (!select.disabled) {
-        observer.disconnect();
+        stopObserver();
         resolve();
       }
-    });
-    observer.observe(select, { attributes: true, attributeFilter: ["disabled"] });
+    }, { attributes: true, attributeFilter: ["disabled"], debounceMs: 0 });
   });
 }
 
@@ -73,12 +73,12 @@ export function fillParentThenWaitChild(
     const finish = (result: CascadeChildWaitResult) => {
       if (settled) return;
       settled = true;
-      observer.disconnect();
+      stopObserver();
       clearTimeout(timeoutId);
       resolve(result);
     };
 
-    const observer = new MutationObserver((mutations) => {
+    const stopObserver = createDebouncedObserver(child, (mutations) => {
       if (!child.disabled) {
         finish("ready");
         return;
@@ -96,14 +96,13 @@ export function fillParentThenWaitChild(
       ) {
         finish("ready");
       }
-    });
-
-    observer.observe(child, {
+    }, {
       attributes: true,
       attributeFilter: ["disabled", "value", "selected", "label"],
       childList: true,
       characterData: true,
       subtree: true,
+      debounceMs: 0,
     });
     const timeoutId = setTimeout(() => finish("timeout"), timeoutMs);
 

@@ -1,3 +1,5 @@
+import { createDebouncedObserver } from "./debouncedObserver";
+
 /** Default debounce for a form framework that renders a question in several DOM mutations. */
 export const DYNAMIC_FIELD_RESCAN_DEBOUNCE_MS = 200;
 
@@ -10,23 +12,12 @@ export function observeDynamicFields(
   onRescan: () => void,
   debounceMs = DYNAMIC_FIELD_RESCAN_DEBOUNCE_MS,
 ): () => void {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const observer = new MutationObserver((mutations) => {
+  return createDebouncedObserver(root, (mutations) => {
     if (!mutations.some((mutation) => mutation.type === "childList" && mutation.addedNodes.length > 0)) {
       return;
     }
-    if (timer !== undefined) clearTimeout(timer);
-    timer = setTimeout(() => {
-      timer = undefined;
-      onRescan();
-    }, debounceMs);
-  });
-
-  observer.observe(root, { childList: true, subtree: true });
-  return () => {
-    observer.disconnect();
-    if (timer !== undefined) clearTimeout(timer);
-  };
+    onRescan();
+  }, { childList: true, subtree: true, debounceMs });
 }
 
 /** Returns the smallest stable root that contains dynamically-added questions. */
