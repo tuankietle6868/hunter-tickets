@@ -16,6 +16,7 @@ import { isCssHidden } from "./visibility";
 import { acceptsFormattedValue } from "./inputConstraints";
 import { createStableElementLocator, resolveLiveElement } from "./liveElement";
 import { detectedFieldCache, type FieldGroup } from "./fieldCache";
+import { logInstantFieldDuration, performanceNow } from "./performance";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -157,6 +158,14 @@ function registerFieldGroups(fields: readonly DetectedField[]): void {
   }
 }
 
+function isCascadeField(field: DetectedField): boolean {
+  return (
+    field.candidateType === "PROVINCE" ||
+    field.candidateType === "DISTRICT_LEGACY" ||
+    field.candidateType === "WARD"
+  );
+}
+
 /** Runs the generic SCAN → MATCH → FILL → VERIFY workflow for this document. */
 export async function runGenericAutofill(
   profile: Profile,
@@ -171,104 +180,112 @@ export async function runGenericAutofill(
 
   const results = await Promise.all(
     adapter.findQuestions().map(async (question) => {
-      const input = adapter.findInput(question);
-      const signals = adapter.getQuestionText(question);
-      const match = scoreField(signals);
-      const controlType = classifyControl(input ?? question);
-      const stableLocator = createStableElementLocator(input ?? question);
-      const element = input ?? question;
-      const detectedField = detectedFieldCache.getOrCreate(element, () => ({
-        elementRef: new WeakRef(element),
-        stableLocator,
-        controlType,
-        selectMode: getNativeSelectMode(input),
-        checkboxMode: getNativeCheckboxMode(input),
-        signals,
-        candidateType: match.type,
-        confidence: match.confidence,
-        status: "pending",
-      }));
-      detectedField.status = "pending";
-      const value = getProfileValue(profile, match.type);
+      const startedAt = performanceNow();
+      let detectedField: DetectedField | undefined;
+      try {
+        const input = adapter.findInput(question);
+        const signals = adapter.getQuestionText(question);
+        const match = scoreField(signals);
+        const controlType = classifyControl(input ?? question);
+        const stableLocator = createStableElementLocator(input ?? question);
+        const element = input ?? question;
+        detectedField = detectedFieldCache.getOrCreate(element, () => ({
+          elementRef: new WeakRef(element),
+          stableLocator,
+          controlType,
+          selectMode: getNativeSelectMode(input),
+          checkboxMode: getNativeCheckboxMode(input),
+          signals,
+          candidateType: match.type,
+          confidence: match.confidence,
+          status: "pending",
+        }));
+        detectedField.status = "pending";
+        const value = getProfileValue(profile, match.type);
 
-      if (isCssHidden(input ?? question)) {
-        detectedField.status = "skipped";
-        return detectedField;
-      }
-
-      if (isHardPolicyBlocked(signals, match.type)) {
-        detectedField.status = "policy_blocked";
-        return detectedField;
-      }
-
-      if (match.ambiguous) {
-        detectedField.status = "ambiguous";
-        return detectedField;
-      }
-
-      if (
-        input instanceof HTMLSelectElement &&
-        profile.dateOfBirth &&
-        isAutoFillPermitted("DATE_OF_BIRTH", controlType)
-      ) {
-        const didFill = fillNativeBirthDateSelect(
-          input,
-          profile.dateOfBirth,
-          handledBirthDateSelects,
-        );
-        if (didFill !== undefined) {
-          detectedField.candidateType = "DATE_OF_BIRTH";
-          detectedField.confidence = 100;
-          detectedField.status = didFill ? "filled" : "verify_failed";
+        if (isCssHidden(input ?? question)) {
+          detectedField.status = "skipped";
           return detectedField;
         }
-      }
 
-      if (!input || !value) {
-        detectedField.status = "skipped";
-        return detectedField;
-      }
+        if (isHardPolicyBlocked(signals, match.type)) {
+          detectedField.status = "policy_blocked";
+          return detectedField;
+        }
 
-      if (match.confidence < AUTO_FILL_CONFIDENCE) {
-        detectedField.status = "low_confidence";
-        return detectedField;
-      }
+        if (match.ambiguous) {
+          detectedField.status = "ambiguous";
+          return detectedField;
+        }
 
-      if (!isAutoFillPermitted(match.type, controlType)) {
-        detectedField.status = "policy_blocked";
-        return detectedField;
-      }
+        if (
+          input instanceof HTMLSelectElement &&
+          profile.dateOfBirth &&
+          isAutoFillPermitted("DATE_OF_BIRTH", controlType)
+        ) {
+          const didFill = fillNativeBirthDateSelect(
+            input,
+            profile.dateOfBirth,
+            handledBirthDateSelects,
+          );
+          if (didFill !== undefined) {
+            detectedField.candidateType = "DATE_OF_BIRTH";
+            detectedField.confidence = 100;
+            detectedField.status = didFill ? "filled" : "verify_failed";
+            return detectedField;
+          }
+        }
 
-      const permitsSameValue =
-        match.type === "DATE_OF_BIRTH" || isProfileConfirmationField(signals, match.type);
-      const formattedValue = formatValueForInput(value, match.type, input);
-      if (!acceptsFormattedValue(input, formattedValue)) {
-        detectedField.status = "format_mismatch";
-        return detectedField;
-      }
-      if (hasExistingValue(input)) {
-        if (!permitsSameValue) autoFilledFieldTypes.add(match.type);
-        detectedField.status = (await adapter.verifyValue(input, formattedValue))
+        if (!input || !value) {
+          detectedField.status = "skipped";
+          return detectedField;
+        }
+
+        if (match.confidence < AUTO_FILL_CONFIDENCE) {
+          detectedField.status = "low_confidence";
+          return detectedField;
+        }
+
+        if (!isAutoFillPermitted(match.type, controlType)) {
+          detectedField.status = "policy_blocked";
+          return detectedField;
+        }
+
+        const permitsSameValue =
+          match.type === "DATE_OF_BIRTH" || isProfileConfirmationField(signals, match.type);
+        const formattedValue = formatValueForInput(value, match.type, input);
+        if (!acceptsFormattedValue(input, formattedValue)) {
+          detectedField.status = "format_mismatch";
+          return detectedField;
+        }
+        if (hasExistingValue(input)) {
+          if (!permitsSameValue) autoFilledFieldTypes.add(match.type);
+          detectedField.status = (await adapter.verifyValue(input, formattedValue))
+            ? "filled"
+            : "prepopulated_mismatch";
+          return detectedField;
+        }
+
+        if (autoFilledFieldTypes.has(match.type) && !permitsSameValue) {
+          detectedField.status = "duplicate_manual";
+          return detectedField;
+        }
+        if (!permitsSameValue) {
+          autoFilledFieldTypes.add(match.type);
+        }
+
+        adapter.setValue(input, formattedValue);
+        const liveInput = resolveLiveElement(stableLocator, input.ownerDocument) ?? input;
+        detectedField.elementRef = new WeakRef(liveInput);
+        detectedField.status = (await adapter.verifyValue(liveInput, formattedValue))
           ? "filled"
-          : "prepopulated_mismatch";
+          : "verify_failed";
         return detectedField;
+      } finally {
+        if (detectedField && !isCascadeField(detectedField)) {
+          logInstantFieldDuration(detectedField, performanceNow() - startedAt);
+        }
       }
-
-      if (autoFilledFieldTypes.has(match.type) && !permitsSameValue) {
-        detectedField.status = "duplicate_manual";
-        return detectedField;
-      }
-      if (!permitsSameValue) {
-        autoFilledFieldTypes.add(match.type);
-      }
-
-      adapter.setValue(input, formattedValue);
-      const liveInput = resolveLiveElement(stableLocator, input.ownerDocument) ?? input;
-      detectedField.elementRef = new WeakRef(liveInput);
-      detectedField.status = (await adapter.verifyValue(liveInput, formattedValue))
-        ? "filled"
-        : "verify_failed";
-      return detectedField;
     }),
   );
   registerFieldGroups(results);

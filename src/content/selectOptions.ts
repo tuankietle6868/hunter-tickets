@@ -1,5 +1,6 @@
 import type { DetectedField } from "../shared/types";
 import { createDebouncedObserver } from "./debouncedObserver";
+import { logCascadeDuration, performanceNow } from "./performance";
 
 /** A serialisable snapshot of one native `<option>` element. */
 export interface SelectOption {
@@ -121,24 +122,29 @@ export async function fillCascadingSelectChain(
   steps: readonly CascadingSelectStep[],
   timeoutMs = CASCADE_CHILD_WAIT_TIMEOUT_MS,
 ): Promise<CascadingSelectChainResult[]> {
+  const startedAt = performanceNow();
   const results: CascadingSelectChainResult[] = [];
-  for (const [index, step] of steps.entries()) {
-    const child = steps[index + 1]?.select;
-    if (child) {
-      const waitResult = await fillParentThenWaitChild(step.select, step.value, child, timeoutMs);
-      results.push({ step, status: "filled" });
-      if (waitResult === "timeout") {
-        const timedOutStep = steps[index + 1];
-        if (timedOutStep.detectedField) timedOutStep.detectedField.status = "cascade_timeout";
-        results.push({ step: timedOutStep, status: "cascade_timeout" });
-        break;
+  try {
+    for (const [index, step] of steps.entries()) {
+      const child = steps[index + 1]?.select;
+      if (child) {
+        const waitResult = await fillParentThenWaitChild(step.select, step.value, child, timeoutMs);
+        results.push({ step, status: "filled" });
+        if (waitResult === "timeout") {
+          const timedOutStep = steps[index + 1];
+          if (timedOutStep.detectedField) timedOutStep.detectedField.status = "cascade_timeout";
+          results.push({ step: timedOutStep, status: "cascade_timeout" });
+          break;
+        }
+      } else {
+        setNativeSelectValue(step.select, step.value);
+        results.push({ step, status: "filled" });
       }
-    } else {
-      setNativeSelectValue(step.select, step.value);
-      results.push({ step, status: "filled" });
     }
+    return results;
+  } finally {
+    logCascadeDuration(performanceNow() - startedAt);
   }
-  return results;
 }
 
 /** Extracts every option from a native select, including options in optgroups. */
