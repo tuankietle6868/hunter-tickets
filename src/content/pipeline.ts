@@ -21,6 +21,11 @@ import { logInstantFieldDuration, performanceNow } from "./performance";
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
 
+export interface AutofillProgress {
+  /** Called as soon as a non-cascading field has completed SCAN → FILL → VERIFY. */
+  onIndependentFieldComplete?: (field: DetectedField) => void;
+}
+
 const PROFILE_KEY_BY_FIELD_TYPE: Partial<Record<FieldType, keyof Profile>> = {
   FULL_NAME: "fullName",
   ID_NUMBER: "idNumber",
@@ -170,6 +175,7 @@ function isCascadeField(field: DetectedField): boolean {
 export async function runGenericAutofill(
   profile: Profile,
   adapter = new GenericHtmlAdapter(),
+  progress?: AutofillProgress,
 ): Promise<DetectedField[]> {
   if (!adapter.isApplicable()) {
     return [];
@@ -284,6 +290,7 @@ export async function runGenericAutofill(
       } finally {
         if (detectedField && !isCascadeField(detectedField)) {
           logInstantFieldDuration(detectedField, performanceNow() - startedAt);
+          progress?.onIndependentFieldComplete?.(detectedField);
         }
       }
     }),

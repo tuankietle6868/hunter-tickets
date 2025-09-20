@@ -22,6 +22,11 @@ export interface OverlayActions {
   fields?: DetectedField[];
 }
 
+export interface OverlayProgress {
+  /** Some cascade controls are still resolving while completed fields are shown. */
+  pendingCascade?: boolean;
+}
+
 const FIELD_LABELS: Record<FieldType, string> = {
   FULL_NAME: "Họ và tên",
   ID_NUMBER: "Số CCCD",
@@ -178,6 +183,7 @@ export function showAutofillOverlay(
   results: DetectedField[],
   ownerDocument: Document = document,
   actions?: OverlayActions,
+  progress?: OverlayProgress,
 ): void {
   const filled = results.filter(({ status }) => status === "filled").length;
   const needsReview = results.filter(({ status }) => status === "verify_failed").length;
@@ -212,8 +218,10 @@ export function showAutofillOverlay(
     : "";
   renderOverlay(
     {
-      title: "Đã hoàn tất điền form",
-      message,
+      title: progress?.pendingCascade ? "Đang điền form" : "Đã hoàn tất điền form",
+      message: progress?.pendingCascade
+        ? `${message} Các trường phụ thuộc đang tiếp tục xử lý.`
+        : message,
       content,
       actions: actions ? { ...actions, fields: results } : undefined,
     },

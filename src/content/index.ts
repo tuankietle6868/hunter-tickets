@@ -35,15 +35,31 @@ async function runContentScript(): Promise<void> {
     return;
   }
 
-  const results = await runGenericAutofill(profile, googleFormsAdapter);
+  const independentResults: import("../shared/types").DetectedField[] = [];
+  const renderOverlay = (
+    results: import("../shared/types").DetectedField[],
+    pendingCascade = false,
+  ) => {
+    if (!overlayAutoEnabled) return;
+    showAutofillOverlay(
+      results,
+      document,
+      {
+        onRescan: runContentScript,
+        onRefill: runContentScript,
+        onFieldSelect: scrollToAndHighlightField,
+      },
+      { pendingCascade },
+    );
+  };
+  const results = await runGenericAutofill(profile, googleFormsAdapter, {
+    onIndependentFieldComplete: (field) => {
+      independentResults.push(field);
+      renderOverlay(independentResults, true);
+    },
+  });
   observeDynamicFieldChanges();
-  if (overlayAutoEnabled) {
-    showAutofillOverlay(results, document, {
-      onRescan: runContentScript,
-      onRefill: runContentScript,
-      onFieldSelect: scrollToAndHighlightField,
-    });
-  }
+  renderOverlay(results);
   console.log("[Smart Form Autofill] Fill results:", results);
 }
 
