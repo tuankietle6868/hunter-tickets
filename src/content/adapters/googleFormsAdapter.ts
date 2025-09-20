@@ -69,6 +69,10 @@ function afterNextAnimationFrame(ownerDocument: Document): Promise<void> {
   });
 }
 
+function isCurrentPageQuestion(question: HTMLElement): boolean {
+  return !question.closest('[aria-hidden="true"], [hidden]');
+}
+
 /**
  * Reads the published Google Forms respondent DOM using stable ARIA roles.
  * Generated CSS classes and Google `js*` attributes are intentionally ignored.
@@ -84,7 +88,9 @@ export class GoogleFormsAdapter implements IFormAdapter {
    * radio groups). Filtering happens in `findInput`, not during the scan.
    */
   findQuestions(): QuestionBlock[] {
-    return Array.from(document.querySelectorAll<HTMLElement>(QUESTION_SELECTOR));
+    return Array.from(document.querySelectorAll<HTMLElement>(QUESTION_SELECTOR)).filter(
+      isCurrentPageQuestion,
+    );
   }
 
   getQuestionText(question: QuestionBlock): FieldSignals {

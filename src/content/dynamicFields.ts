@@ -20,7 +20,15 @@ export function observeDynamicFields(
   }, { childList: true, subtree: true, debounceMs });
 }
 
-/** Returns the smallest stable root that contains dynamically-added questions. */
+/**
+ * Returns the smallest stable root that contains dynamically-added questions.
+ * Google Forms may replace its entire question list between pages, so observe
+ * its main respondent container rather than the list node itself.
+ */
 export function findDynamicFieldRoot(ownerDocument: Document = document): Element | null {
-  return ownerDocument.querySelector("form") ?? ownerDocument.querySelector('[role="list"]');
+  return (
+    ownerDocument.querySelector("form") ??
+    ownerDocument.querySelector('main[role="main"]') ??
+    ownerDocument.querySelector('[role="list"]')
+  );
 }
