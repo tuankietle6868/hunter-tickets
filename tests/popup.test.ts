@@ -21,6 +21,31 @@ function installStorage(items: Record<string, unknown>) {
   });
 }
 
+function installTicketboxChrome(options: { granted: boolean }) {
+  const executeScript = vi.fn(async () => undefined);
+  const request = vi.fn(async () => options.granted);
+  Object.defineProperty(globalThis, "chrome", {
+    configurable: true,
+    value: {
+      storage: {
+        local: {
+          get: vi.fn(async (key: string) => ({ [key]: undefined })),
+          set: vi.fn(),
+        },
+      },
+      tabs: {
+        query: vi.fn(async () => [{ id: 42, url: "https://www.ticketbox.vn/event/example" }]),
+      },
+      permissions: {
+        contains: vi.fn(async () => false),
+        request,
+      },
+      scripting: { executeScript },
+    },
+  });
+  return { executeScript, request };
+}
+
 afterEach(() => {
   document.body.innerHTML = "";
   Object.defineProperty(globalThis, "chrome", {
@@ -80,5 +105,25 @@ describe("Profile popup", () => {
       expect((document.querySelector("#fullName") as HTMLInputElement).value).toBe(values.fullName);
       expect((document.querySelector("#address") as HTMLInputElement).value).toBe(values.address);
     });
+  });
+
+  it("requests access only for the active supported domain and starts autofill immediately", async () => {
+    const { executeScript, request } = installTicketboxChrome({ granted: true });
+    document.body.innerHTML = '<main id="app"></main>';
+
+    await import("../src/popup/index.ts?ticketbox-permission");
+    const button = document.querySelector<HTMLButtonElement>("#request-site-permission");
+
+    await vi.waitFor(() => expect(button?.textContent).toBe("Cấp quyền"));
+    button!.click();
+
+    await vi.waitFor(() => {
+      expect(request).toHaveBeenCalledWith({ origins: ["https://www.ticketbox.vn/*"] });
+      expect(executeScript).toHaveBeenCalledWith({
+        target: { tabId: 42 },
+        files: ["content/index.js"],
+      });
+    });
+    expect(button?.hidden).toBe(true);
   });
 });

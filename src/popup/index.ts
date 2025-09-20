@@ -60,16 +60,44 @@ const fields: Array<{
 ];
 
 type TabsApi = {
-  query(queryInfo: { active: boolean; currentWindow: boolean }): Promise<Array<{ url?: string }>>;
+  query(queryInfo: { active: boolean; currentWindow: boolean }): Promise<Array<{ id?: number; url?: string }>>;
 };
 
-function getActiveDomain(): Promise<string | undefined> {
+type ActiveTab = { id?: number; url?: string };
+
+type PermissionsApi = {
+  contains(permissions: { origins: string[] }): Promise<boolean>;
+  request(permissions: { origins: string[] }): Promise<boolean>;
+};
+
+type ScriptingApi = {
+  executeScript(injection: { target: { tabId: number }; files: string[] }): Promise<unknown>;
+};
+
+type ChromeApi = {
+  tabs?: TabsApi;
+  permissions?: PermissionsApi;
+  scripting?: ScriptingApi;
+};
+
+const optionalDomainLabels: Record<string, string> = {
+  "ticketbox.vn": "Ticketbox",
+  "cticket.vn": "CTicket",
+};
+
+function getOptionalDomain(hostname: string): string | undefined {
+  return Object.keys(optionalDomainLabels).find(
+    (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+  );
+}
+
+function getActiveTab(): Promise<ActiveTab | undefined> {
   const tabs = (globalThis as typeof globalThis & { chrome?: { tabs?: TabsApi } }).chrome?.tabs;
   if (!tabs) return Promise.resolve(undefined);
 
   return tabs
     .query({ active: true, currentWindow: true })
-    .then(([tab]) => (tab?.url ? new URL(tab.url).hostname : undefined))
+    .then(([tab]) => tab)
     .catch(() => undefined);
 }
 
@@ -116,6 +144,13 @@ app.innerHTML = `
         <span class="switch-track" aria-hidden="true"></span>
       </label>
     </section>
+    <section id="site-permission" class="site-permission" aria-labelledby="site-permission-title" hidden>
+      <div>
+        <p id="site-permission-title">Quyền truy cập website</p>
+        <span id="site-permission-description"></span>
+      </div>
+      <button id="request-site-permission" type="button" class="permission-button"></button>
+    </section>
   </section>
 `;
 
@@ -124,8 +159,20 @@ const status = app.querySelector<HTMLParagraphElement>("#form-status");
 const saveButton = app.querySelector<HTMLButtonElement>(".save-button");
 const overlayToggle = app.querySelector<HTMLInputElement>("#auto-overlay");
 const overlayDomain = app.querySelector<HTMLElement>("#overlay-domain");
+const sitePermission = app.querySelector<HTMLElement>("#site-permission");
+const sitePermissionDescription = app.querySelector<HTMLElement>("#site-permission-description");
+const requestSitePermissionButton = app.querySelector<HTMLButtonElement>("#request-site-permission");
 
-if (!form || !status || !saveButton || !overlayToggle || !overlayDomain) {
+if (
+  !form ||
+  !status ||
+  !saveButton ||
+  !overlayToggle ||
+  !overlayDomain ||
+  !sitePermission ||
+  !sitePermissionDescription ||
+  !requestSitePermissionButton
+) {
   throw new Error("Popup form could not be initialized");
 }
 
@@ -185,11 +232,20 @@ async function loadProfile() {
 }
 
 async function loadOverlaySetting() {
-  const domain = await getActiveDomain();
-  if (!domain) {
+  const tab = await getActiveTab();
+  if (!tab?.url) {
     overlayDomain.textContent = "Không thể xác định website hiện tại";
     return;
   }
+
+  let pageUrl: URL;
+  try {
+    pageUrl = new URL(tab.url);
+  } catch {
+    overlayDomain.textContent = "Không thể xác định website hiện tại";
+    return;
+  }
+  const domain = pageUrl.hostname;
 
   try {
     overlayToggle.checked = await isOverlayAutoEnabled(domain);
@@ -211,6 +267,57 @@ async function loadOverlaySetting() {
       overlayToggle.disabled = false;
     }
   });
+
+  const supportedDomain = getOptionalDomain(domain);
+  const chromeApi = (globalThis as typeof globalThis & { chrome?: ChromeApi }).chrome;
+  if (!supportedDomain || pageUrl.protocol !== "https:" || !chromeApi?.permissions) return;
+
+  const origin = `https://${domain}/*`;
+  sitePermission.hidden = false;
+  try {
+    const hasPermission = await chromeApi.permissions.contains({ origins: [origin] });
+    updateSitePermissionUi(hasPermission, domain, supportedDomain);
+  } catch {
+    sitePermissionDescription.textContent = "Không thể kiểm tra quyền truy cập website này.";
+    requestSitePermissionButton.hidden = true;
+  }
+
+  requestSitePermissionButton.addEventListener("click", async () => {
+    requestSitePermissionButton.disabled = true;
+    try {
+      const granted = await chromeApi.permissions!.request({ origins: [origin] });
+      if (!granted) {
+        setStatus("Bạn chưa cấp quyền truy cập website này.", "error");
+        requestSitePermissionButton.disabled = false;
+        return;
+      }
+
+      if (tab.id !== undefined && chromeApi.scripting) {
+        await chromeApi.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ["content/index.js"],
+        });
+      }
+      updateSitePermissionUi(true, domain, supportedDomain);
+      setStatus(`Đã cấp quyền cho ${domain}.`, "success");
+    } catch {
+      setStatus("Không thể cấp quyền. Vui lòng thử lại.", "error");
+      requestSitePermissionButton.disabled = false;
+    }
+  });
+}
+
+function updateSitePermissionUi(granted: boolean, domain: string, supportedDomain: string) {
+  if (granted) {
+    sitePermissionDescription.textContent = `Đã cho phép tự động điền trên ${domain}.`;
+    requestSitePermissionButton.hidden = true;
+    return;
+  }
+
+  sitePermissionDescription.textContent = `Cấp quyền riêng cho ${domain} để tự động điền biểu mẫu ${optionalDomainLabels[supportedDomain]}.`;
+  requestSitePermissionButton.hidden = false;
+  requestSitePermissionButton.disabled = false;
+  requestSitePermissionButton.textContent = "Cấp quyền";
 }
 
 form.addEventListener("submit", async (event) => {

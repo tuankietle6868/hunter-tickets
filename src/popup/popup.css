@@ -186,6 +186,52 @@ input.has-error:focus {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.site-permission {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e1e5ed;
+}
+.site-permission p {
+  margin: 0 0 3px;
+  color: #344158;
+  font-size: 12px;
+  font-weight: 650;
+}
+.site-permission span {
+  display: block;
+  max-width: 250px;
+  color: #758198;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.permission-button {
+  flex: 0 0 auto;
+  height: 31px;
+  padding: 0 10px;
+  border: 1px solid #2867dc;
+  border-radius: 7px;
+  color: #2867dc;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+.permission-button:hover {
+  background: #edf3ff;
+}
+.permission-button:focus-visible {
+  outline: 3px solid rgb(57 116 231 / 32%);
+  outline-offset: 2px;
+}
+.permission-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
 .switch {
   position: relative;
   flex: 0 0 auto;

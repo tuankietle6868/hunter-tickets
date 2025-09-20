@@ -358,8 +358,10 @@ function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: 
   "name": "Smart Form Autofill",
   "version": "0.1.0",
   "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": [
-    "https://docs.google.com/forms/*"
+  "host_permissions": ["https://docs.google.com/forms/*"],
+  "optional_host_permissions": [
+    "https://*.ticketbox.vn/*",
+    "https://*.cticket.vn/*"
   ],
   "action": {
     "default_popup": "popup.html"
@@ -369,7 +371,11 @@ function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: 
   },
   "content_scripts": [
     {
-      "matches": ["https://docs.google.com/forms/*"],
+      "matches": [
+        "https://docs.google.com/forms/*",
+        "https://*.ticketbox.vn/*",
+        "https://*.cticket.vn/*"
+      ],
       "js": ["content/index.js"],
       "run_at": "document_idle"
     }
@@ -381,6 +387,7 @@ Lưu ý:
 
 - Ban đầu chỉ khai báo `host_permissions` cho domain bạn thực sự cần (Google Forms, các domain webform bán vé cụ thể). Việc xin `<all_urls>` ngay từ đầu vừa không cần thiết vừa dễ bị Chrome Web Store review chậm hơn.
 - Với các webform khác (ticketbox, cticket...), nên dùng `optional_host_permissions` + `chrome.permissions.request()` để user chủ động cấp quyền theo từng trang, thay vì xin toàn bộ ngay lúc cài đặt.
+- Popup chỉ hiển thị nút **Cấp quyền** khi tab hiện tại nằm trên Ticketbox hoặc CTicket. Sau khi người dùng chấp thuận, extension chạy ngay trên tab đó; các lần tải trang sau sẽ tự nhận quyền đã cấp.
 
 ---
 

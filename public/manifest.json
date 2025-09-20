@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "Điền nhanh biểu mẫu bằng dữ liệu cá nhân lưu cục bộ.",
   "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": ["https://docs.google.com/forms/*"],
+  "optional_host_permissions": [
+    "https://*.ticketbox.vn/*",
+    "https://*.cticket.vn/*"
+  ],
   "action": {
     "default_popup": "popup.html"
   },
@@ -14,7 +18,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://docs.google.com/forms/*",
+        "https://*.ticketbox.vn/*",
+        "https://*.cticket.vn/*"
+      ],
       "js": ["content/index.js"],
       "run_at": "document_idle"
     }
