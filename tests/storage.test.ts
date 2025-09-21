@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  FIELD_MATCH_FEEDBACK_STORAGE_KEY,
+  getFieldMatchFeedback,
   getProfile,
   isOverlayAutoEnabled,
   OVERLAY_SETTINGS_STORAGE_KEY,
   PROFILE_STORAGE_KEY,
   setOverlayAutoEnabled,
+  saveFieldMatchFeedback,
   setProfile,
 } from "../src/shared/storage";
 import type { Profile } from "../src/shared/types";
@@ -67,6 +70,48 @@ describe("Profile storage", () => {
     await expect(isOverlayAutoEnabled("example.com")).resolves.toBe(true);
     expect(items[OVERLAY_SETTINGS_STORAGE_KEY]).toEqual({
       autoEnabledByDomain: { "docs.google.com": false },
+    });
+  });
+
+  it("stores only a corrected question mapping for its current domain", async () => {
+    const items: Record<string, unknown> = {};
+    Object.defineProperty(globalThis, "chrome", {
+      configurable: true,
+      value: {
+        storage: {
+          local: {
+            get: async (key: string) => ({ [key]: items[key] }),
+            set: async (values: Record<string, unknown>) => Object.assign(items, values),
+          },
+        },
+      },
+    });
+
+    await saveFieldMatchFeedback(
+      "event.example",
+      { labelText: "Mã người tham dự" },
+      "ID_NUMBER",
+      "FULL_NAME",
+    );
+
+    await expect(getFieldMatchFeedback("event.example")).resolves.toEqual([
+      {
+        questionText: "Mã người tham dự",
+        correctedFrom: "ID_NUMBER",
+        correctedTo: "FULL_NAME",
+      },
+    ]);
+    await expect(getFieldMatchFeedback("other.example")).resolves.toEqual([]);
+    expect(items[FIELD_MATCH_FEEDBACK_STORAGE_KEY]).toEqual({
+      byDomain: {
+        "event.example": [
+          {
+            questionText: "Mã người tham dự",
+            correctedFrom: "ID_NUMBER",
+            correctedTo: "FULL_NAME",
+          },
+        ],
+      },
     });
   });
 });

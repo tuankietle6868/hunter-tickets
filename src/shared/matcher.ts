@@ -1,7 +1,7 @@
 import { ALIAS_DICTIONARY, hasNegativeMatch, type AliasEntry } from "./aliasDictionary";
 import { mapAutocompleteToFieldType } from "./autocomplete";
 import { cleanQuestionText, normalize, stripDiacritics } from "./normalizer";
-import type { FieldSignals, FieldType } from "./types";
+import type { FieldMatchFeedback, FieldSignals, FieldType } from "./types";
 
 export const SIGNAL_WEIGHTS = {
   autocomplete: 1.0,
@@ -28,6 +28,8 @@ const SCORABLE_FIELD_TYPES: FieldType[] = [
   "DISTRICT_LEGACY",
   "COMPANY_NAME",
 ];
+
+const LEARNED_FEEDBACK_WEIGHT = 120;
 
 function matchesAlias(value: string, alias: AliasEntry): boolean {
   switch (alias.matchType) {
@@ -62,7 +64,10 @@ export function bestAliasMatch(
 }
 
 /** Scores all available field signals and returns the most likely field type. */
-export function scoreField(signals: FieldSignals): {
+export function scoreField(
+  signals: FieldSignals,
+  learnedFeedback: readonly FieldMatchFeedback[] = [],
+): {
   type: FieldType;
   confidence: number;
   runnerUpType?: FieldType;
@@ -103,6 +108,13 @@ export function scoreField(signals: FieldSignals): {
     }
 
     const normalizedValue = stripDiacritics(normalize(cleanQuestionText(rawValue)));
+
+    for (const feedback of learnedFeedback) {
+      const learnedText = stripDiacritics(normalize(cleanQuestionText(feedback.questionText)));
+      if (normalizedValue === learnedText) {
+        scoresByType[feedback.correctedTo] += LEARNED_FEEDBACK_WEIGHT * weight;
+      }
+    }
 
     for (const fieldType of SCORABLE_FIELD_TYPES) {
       if (hasNegativeMatch(fieldType, normalizedValue)) {

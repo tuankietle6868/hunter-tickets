@@ -18,6 +18,8 @@ export interface OverlayActions {
   onRescan: () => void | Promise<void>;
   onRefill: () => void | Promise<void>;
   onFieldSelect?: (field: DetectedField) => void;
+  /** Saves a user-confirmed correction for a field's future matching. */
+  onFieldCorrection?: (field: DetectedField, correctedTo: FieldType) => void | Promise<void>;
   /** Internal field references used by the rendered result rows. */
   fields?: DetectedField[];
 }
@@ -60,7 +62,12 @@ function getFieldName(field: DetectedField): string {
   );
 }
 
-function renderFieldRow(field: DetectedField, index: number, selectable: boolean): string {
+function renderFieldRow(
+  field: DetectedField,
+  index: number,
+  selectable: boolean,
+  correctable: boolean,
+): string {
   const confidence = Math.max(0, Math.min(100, Math.round(field.confidence)));
   const matched = field.status === "filled";
   const fieldName = escapeHtml(getFieldName(field));
@@ -83,7 +90,26 @@ function renderFieldRow(field: DetectedField, index: number, selectable: boolean
       : field.status === "cascade_timeout"
         ? `<span class="field-status is-review">đang chờ / không tự chọn được — vui lòng chọn tay</span>`
       : `<span class="field-status">○ Not found</span>`;
-  return `<li class="field-row${selectable ? " is-selectable" : ""}"${selectable ? ` data-field-index="${index}" role="button" tabindex="0" aria-label="Đi tới trường ${fieldName}"` : ""}><span class="field-name">${fieldName}${field.status === "cascade_timeout" ? ":" : ""}</span>${status}</li>`;
+  const name = selectable
+    ? `<button class="field-name field-jump" type="button" data-field-index="${index}" aria-label="Đi tới trường ${fieldName}">${fieldName}${field.status === "cascade_timeout" ? ":" : ""}</button>`
+    : `<span class="field-name">${fieldName}${field.status === "cascade_timeout" ? ":" : ""}</span>`;
+  const correction = correctable
+    ? `<button class="field-correction" type="button" data-field-correction="${index}">Sửa match</button>`
+    : "";
+  return `<li class="field-row${selectable ? " is-selectable" : ""}">${name}${status}${correction}</li>`;
+}
+
+function renderCorrectionPicker(): string {
+  const options = (Object.entries(FIELD_LABELS) as Array<[FieldType, string]>)
+    .filter(([type]) => type !== "UNKNOWN")
+    .map(([type, label]) => `<option value="${type}">${label}</option>`)
+    .join("");
+  return `<section class="correction-picker" data-correction-picker hidden aria-live="polite">
+    <p data-correction-title></p>
+    <label>Loại field đúng <select data-correction-type>${options}</select></label>
+    <div><button class="action-button" type="button" data-correction-cancel>Huỷ</button><button class="action-button is-primary" type="button" data-correction-save>Lưu cải thiện</button></div>
+    <p class="correction-status" data-correction-status></p>
+  </section>`;
 }
 
 function renderOverlay(
@@ -111,9 +137,10 @@ function renderOverlay(
       .message { margin: 5px 0 0; color: #596579; font-size: 12px; }
       .field-list { display: grid; gap: 6px; max-height: 180px; margin: 12px 0 0; padding: 0; overflow: auto; list-style: none; }
       .field-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 9px; border-radius: 6px; background: #f6f8fc; font-size: 12px; }
-      .field-row.is-selectable { cursor: pointer; }
-      .field-row.is-selectable:hover, .field-row.is-selectable:focus-visible { background: #eaf1ff; outline: 2px solid #8aafe9; outline-offset: 1px; }
+      .field-row.is-selectable:hover { background: #eaf1ff; }
       .field-name { overflow: hidden; color: #344158; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+      .field-jump { min-width: 0; padding: 0; border: 0; color: #344158; background: transparent; cursor: pointer; font: inherit; font-weight: 650; text-align: left; }
+      .field-jump:hover, .field-jump:focus-visible { color: #1f58c4; outline: 2px solid #8aafe9; outline-offset: 2px; }
       .field-status { flex: 0 0 auto; color: #788397; font-size: 11px; font-weight: 650; }
       .field-status.is-matched { color: #148044; }
       .field-status.is-review { color: #b35c08; }
@@ -124,6 +151,14 @@ function renderOverlay(
       .action-button.is-primary { border-color: #2867dc; color: #fff; background: #2867dc; }
       .action-button.is-primary:hover, .action-button.is-primary:focus-visible { background: #1f58c4; }
       .action-button:disabled { cursor: wait; opacity: .65; }
+      .field-correction { flex: 0 0 auto; padding: 3px 5px; border: 0; border-radius: 4px; color: #1f58c4; background: #eaf1ff; cursor: pointer; font: 700 10px/1 Inter, ui-sans-serif, system-ui, sans-serif; }
+      .field-correction:hover, .field-correction:focus-visible { background: #dce9ff; outline: 2px solid #8aafe9; outline-offset: 1px; }
+      .correction-picker { margin-top: 10px; padding: 9px; border: 1px solid #b9cae9; border-radius: 7px; background: #f6f9ff; color: #344158; font-size: 11px; }
+      .correction-picker p { margin: 0 0 7px; font-weight: 650; }
+      .correction-picker label { display: grid; gap: 4px; font-weight: 650; }
+      .correction-picker select { width: 100%; height: 29px; padding: 0 5px; border: 1px solid #b8c5d9; border-radius: 5px; color: #344158; background: #fff; font: inherit; }
+      .correction-picker div { display: flex; gap: 6px; margin-top: 8px; }
+      .correction-status { min-height: 14px; margin: 7px 0 0 !important; color: #168044; font-weight: 600 !important; }
       button { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 6px; color: #667085; background: transparent; cursor: pointer; font: 20px/1 sans-serif; }
       button:hover, button:focus-visible { color: #172033; background: #edf1f7; outline: none; }
     </style>
@@ -132,6 +167,7 @@ function renderOverlay(
       <h2>${title}</h2>
       <p class="message">${message}</p>
       ${content}
+      ${actions?.onFieldCorrection ? renderCorrectionPicker() : ""}
       <p class="safety-notice">Hãy tự kiểm tra và bấm Submit gốc của form.</p>
       ${
         actions
@@ -174,6 +210,47 @@ function renderOverlay(
         });
       });
     }
+
+    if (actions.onFieldCorrection) {
+      let correctionIndex: number | undefined;
+      const picker = shadow.querySelector<HTMLElement>("[data-correction-picker]");
+      const title = shadow.querySelector<HTMLElement>("[data-correction-title]");
+      const select = shadow.querySelector<HTMLSelectElement>("[data-correction-type]");
+      const save = shadow.querySelector<HTMLButtonElement>("[data-correction-save]");
+      const cancel = shadow.querySelector<HTMLButtonElement>("[data-correction-cancel]");
+      const correctionStatus = shadow.querySelector<HTMLElement>("[data-correction-status]");
+
+      shadow.querySelectorAll<HTMLButtonElement>("[data-field-correction]").forEach((button) => {
+        button.addEventListener("click", () => {
+          correctionIndex = Number(button.dataset.fieldCorrection);
+          const field = actions.fields?.[correctionIndex];
+          if (!field || !picker || !title || !select) return;
+          title.textContent = `Sửa nhận diện: ${getFieldName(field)}`;
+          select.value = field.candidateType === "UNKNOWN" ? "FULL_NAME" : field.candidateType;
+          if (correctionStatus) correctionStatus.textContent = "";
+          picker.hidden = false;
+          select.focus();
+        });
+      });
+      cancel?.addEventListener("click", () => {
+        if (picker) picker.hidden = true;
+      });
+      save?.addEventListener("click", () => {
+        const field = correctionIndex === undefined ? undefined : actions.fields?.[correctionIndex];
+        if (!field || !select || !picker) return;
+        save.disabled = true;
+        void Promise.resolve(actions.onFieldCorrection!(field, select.value as FieldType))
+          .then(() => {
+            if (correctionStatus) correctionStatus.textContent = "Đã lưu cho lần quét sau trên website này.";
+          })
+          .catch(() => {
+            if (correctionStatus) correctionStatus.textContent = "Không thể lưu. Vui lòng thử lại.";
+          })
+          .finally(() => {
+            save.disabled = false;
+          });
+      });
+    }
   }
   (ownerDocument.body ?? ownerDocument.documentElement).append(host);
 }
@@ -214,7 +291,7 @@ export function showAutofillOverlay(
     ? `Đã điền ${filled} trường. Có ${needsReview} trường cần kiểm tra lại.`
     : `Đã điền ${filled} trường. Hãy kiểm tra thông tin trước khi gửi form.`;
   const content = results.length
-    ? `<ul class="field-list" aria-label="Kết quả nhận diện field">${results.map((field, index) => renderFieldRow(field, index, Boolean(actions?.onFieldSelect))).join("")}</ul>`
+    ? `<ul class="field-list" aria-label="Kết quả nhận diện field">${results.map((field, index) => renderFieldRow(field, index, Boolean(actions?.onFieldSelect), Boolean(actions?.onFieldCorrection))).join("")}</ul>`
     : "";
   renderOverlay(
     {

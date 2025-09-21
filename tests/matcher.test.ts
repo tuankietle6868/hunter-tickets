@@ -55,4 +55,19 @@ describe("scoreField", () => {
     expect(result.candidateGap).toBeLessThan(15);
     expect(result.ambiguousTypes).toEqual(["COMPANY_NAME", "FULL_NAME"]);
   });
+
+  it("prefers an exact user-confirmed mapping over a conflicting built-in alias", () => {
+    expect(
+      scoreField(
+        { labelText: "Tên công ty" },
+        [
+          {
+            questionText: "Tên công ty",
+            correctedFrom: "COMPANY_NAME",
+            correctedTo: "FULL_NAME",
+          },
+        ],
+      ),
+    ).toMatchObject({ type: "FULL_NAME", ambiguous: false });
+  });
 });

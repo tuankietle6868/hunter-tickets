@@ -59,6 +59,14 @@ export interface FieldSignals {
   inputType?: string;
 }
 
+/** A user-confirmed field mapping, stored locally for one website domain. */
+export interface FieldMatchFeedback {
+  /** A human-readable question label or ARIA label; never a field value. */
+  questionText: string;
+  correctedFrom: FieldType;
+  correctedTo: FieldType;
+}
+
 /** A DOM-independent way to resolve a field after a framework re-renders it. */
 export interface StableElementLocator {
   id?: string;

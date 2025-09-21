@@ -205,4 +205,29 @@ describe("Autofill overlay", () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
     expect(input.style.outline).toBe("3px solid #2563eb");
   });
+
+  it("lets the user correct a match and saves the selected field type", async () => {
+    const onFieldCorrection = vi.fn(async () => undefined);
+    const field = {
+      candidateType: "ID_NUMBER",
+      confidence: 91,
+      signals: { labelText: "Mã người tham dự" },
+      status: "filled",
+    } as DetectedField;
+    showAutofillOverlay([field], document, {
+      onRescan: vi.fn(),
+      onRefill: vi.fn(),
+      onFieldCorrection,
+    });
+
+    const shadow = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot;
+    if (!shadow) throw new Error("Overlay shadow root was not rendered");
+    (shadow.querySelector("[data-field-correction='0']") as HTMLButtonElement).click();
+    const select = shadow.querySelector<HTMLSelectElement>("[data-correction-type]")!;
+    select.value = "FULL_NAME";
+    (shadow.querySelector("[data-correction-save]") as HTMLButtonElement).click();
+
+    await vi.waitFor(() => expect(onFieldCorrection).toHaveBeenCalledWith(field, "FULL_NAME"));
+    expect(shadow.querySelector("[data-correction-status]")?.textContent).toContain("Đã lưu");
+  });
 });

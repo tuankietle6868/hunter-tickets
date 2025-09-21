@@ -1,4 +1,9 @@
-import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
+import {
+  getFieldMatchFeedback,
+  getProfile,
+  isOverlayAutoEnabled,
+  saveFieldMatchFeedback,
+} from "../shared/storage";
 import { MicrosoftFormsAdapter } from "./adapters/microsoftFormsAdapter";
 import { ReactVueAdapter } from "./adapters/reactVueAdapter";
 import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
@@ -38,6 +43,7 @@ async function runContentScript(): Promise<void> {
   if (!profile) {
     return;
   }
+  const learnedFeedback = await getFieldMatchFeedback(window.location.hostname);
 
   const independentResults: import("../shared/types").DetectedField[] = [];
   const renderOverlay = (
@@ -52,6 +58,14 @@ async function runContentScript(): Promise<void> {
         onRescan: runContentScript,
         onRefill: runContentScript,
         onFieldSelect: scrollToAndHighlightField,
+        onFieldCorrection: async (field, correctedTo) => {
+          await saveFieldMatchFeedback(
+            window.location.hostname,
+            field.signals,
+            field.candidateType,
+            correctedTo,
+          );
+        },
       },
       { pendingCascade },
     );
@@ -64,6 +78,7 @@ async function runContentScript(): Promise<void> {
         independentResults.push(field);
         renderOverlay(independentResults, true);
       },
+      learnedFeedback,
     },
   );
   observeDynamicFieldChanges();

@@ -1,5 +1,5 @@
 import { scoreField } from "../shared/matcher";
-import type { DetectedField, FieldType, Profile } from "../shared/types";
+import type { DetectedField, FieldMatchFeedback, FieldType, Profile } from "../shared/types";
 import { GenericHtmlAdapter } from "./adapters/genericHtmlAdapter";
 import { classifyControl, getNativeCheckboxMode, getNativeSelectMode } from "./controlType";
 import {
@@ -24,6 +24,8 @@ export const AUTO_FILL_CONFIDENCE = 80;
 export interface AutofillProgress {
   /** Called as soon as a non-cascading field has completed SCAN → FILL → VERIFY. */
   onIndependentFieldComplete?: (field: DetectedField) => void;
+  /** User-confirmed local mappings for the active hostname. */
+  learnedFeedback?: readonly FieldMatchFeedback[];
 }
 
 const PROFILE_KEY_BY_FIELD_TYPE: Partial<Record<FieldType, keyof Profile>> = {
@@ -191,7 +193,7 @@ export async function runGenericAutofill(
       try {
         const input = adapter.findInput(question);
         const signals = adapter.getQuestionText(question);
-        const match = scoreField(signals);
+        const match = scoreField(signals, progress?.learnedFeedback);
         const controlType = classifyControl(input ?? question);
         const stableLocator = createStableElementLocator(input ?? question);
         const element = input ?? question;

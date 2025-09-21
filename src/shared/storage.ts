@@ -1,11 +1,30 @@
-import type { Profile } from "./types";
+import type { FieldMatchFeedback, FieldSignals, FieldType, Profile } from "./types";
 
 export const PROFILE_STORAGE_KEY = "profile";
 export const OVERLAY_SETTINGS_STORAGE_KEY = "overlaySettings";
+export const FIELD_MATCH_FEEDBACK_STORAGE_KEY = "fieldMatchFeedback";
 
 export interface OverlaySettings {
   /** A missing domain defaults to enabled so existing users keep current behaviour. */
   autoEnabledByDomain: Record<string, boolean>;
+}
+
+interface FieldMatchFeedbackStore {
+  byDomain: Record<string, FieldMatchFeedback[]>;
+}
+
+function getQuestionText(signals: FieldSignals): string | undefined {
+  return (
+    signals.visibleQuestionText ??
+    signals.labelText ??
+    signals.ariaLabelledByText ??
+    signals.ariaLabel ??
+    signals.placeholder ??
+    signals.name ??
+    signals.id
+  )
+    ?.trim()
+    .replace(/\s+/g, " ");
 }
 
 type StorageLocalArea = {
@@ -58,4 +77,48 @@ export async function setOverlayAutoEnabled(domain: string, enabled: boolean): P
       },
     } satisfies OverlaySettings,
   });
+}
+
+/** Returns user-confirmed mappings that apply only to the current hostname. */
+export async function getFieldMatchFeedback(domain: string): Promise<FieldMatchFeedback[]> {
+  const items = await getLocalStorage().get(FIELD_MATCH_FEEDBACK_STORAGE_KEY);
+  const store = items[FIELD_MATCH_FEEDBACK_STORAGE_KEY] as FieldMatchFeedbackStore | undefined;
+  return store?.byDomain[domain] ?? [];
+}
+
+/**
+ * Stores one corrected mapping locally. Existing corrections for the same
+ * visible question replace one another, keeping the newest user choice.
+ */
+export async function saveFieldMatchFeedback(
+  domain: string,
+  signals: FieldSignals,
+  correctedFrom: FieldType,
+  correctedTo: FieldType,
+): Promise<boolean> {
+  const questionText = getQuestionText(signals);
+  if (!questionText || correctedTo === "UNKNOWN") return false;
+
+  const local = getLocalStorage();
+  const items = await local.get(FIELD_MATCH_FEEDBACK_STORAGE_KEY);
+  const store = items[FIELD_MATCH_FEEDBACK_STORAGE_KEY] as FieldMatchFeedbackStore | undefined;
+  const current = store?.byDomain[domain] ?? [];
+  const feedback: FieldMatchFeedback = { questionText, correctedFrom, correctedTo };
+  const existingIndex = current.findIndex(
+    (entry) => entry.questionText.localeCompare(questionText, undefined, { sensitivity: "accent" }) === 0,
+  );
+  const next = [...current];
+  if (existingIndex >= 0) next[existingIndex] = feedback;
+  else next.push(feedback);
+
+  await local.set({
+    [FIELD_MATCH_FEEDBACK_STORAGE_KEY]: {
+      byDomain: {
+        ...store?.byDomain,
+        // Keep feedback bounded while allowing corrections for sizeable forms.
+        [domain]: next.slice(-100),
+      },
+    } satisfies FieldMatchFeedbackStore,
+  });
+  return true;
 }
