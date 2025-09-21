@@ -7,6 +7,7 @@
 - Extension **không tự bấm Submit**. Người dùng luôn là người bấm nút gửi form cuối cùng.
 - Extension **không gửi request hàng loạt**, không polling liên tục, không bypass giới hạn slot/rate-limit của server.
 - Chỉ thao tác trên DOM đã render trong tab hiện tại của người dùng — tương đương một người dùng gõ tay nhanh hơn, không phải bot tấn công server.
+- Mọi thao tác điền phải đi qua **Policy Gate**: không bao giờ tự tick checkbox đồng ý/điều khoản và luôn bỏ qua field ẩn, không tìm cách vượt qua cơ chế ẩn/hiện của form.
 
 ---
 
@@ -18,7 +19,7 @@
 |Độ chính xác|Chỉ điền khi confidence ≥ ngưỡng (mặc định 80). Field không chắc → để trống, báo cho user|
 |Độc lập thứ tự field|Matching dựa trên nội dung/label, không dựa vị trí DOM|
 |Đa nền tảng form|Generic HTML, Google Forms (ưu tiên), mở rộng Microsoft Forms/React/Vue sau|
-|An toàn|Không auto-submit, không spam, dữ liệu cá nhân chỉ lưu local|
+|An toàn|Không auto-submit, không spam request, áp dụng Policy Gate; dữ liệu cá nhân chỉ lưu local|
 
 ---
 
@@ -267,7 +268,7 @@ export interface IFormAdapter {
 
 ### 5.1 GenericHtmlAdapter
 
-- `findQuestions()` = mọi `input:not([type=hidden]):not([type=submit])`, `textarea`.
+- `findQuestions()` chỉ xét text input/textarea đang hiển thị; loại trừ `hidden`, submit, checkbox/radio/switch và phần tử không thao tác được theo Policy Gate.
 - Text câu hỏi lấy từ `<label for>` hoặc label cha gần nhất.
 - `setValue` dùng native setter (chi tiết mục 6).
 
@@ -304,15 +305,30 @@ function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: 
 
 ---
 
-## 6. Workflow SCAN → MATCH → FILL → VERIFY → READY
+## 6. Policy Gate và workflow SCAN → MATCH → FILL → VERIFY → READY
+
+**Policy Gate là bước chặn bắt buộc trước khi filler can thiệp vào bất kỳ phần tử nào.** Mục tiêu là chỉ hỗ trợ nhập dữ liệu cá nhân vào trường văn bản đang hiển thị, còn các quyết định, xác nhận và luồng điều kiện vẫn thuộc về người dùng và form.
+
+- **Không auto-submit:** extension không click, không trigger và không gọi bất kỳ cơ chế gửi form nào. Người dùng tự kiểm tra rồi bấm nút gửi gốc.
+- **Không spam request:** extension chỉ đọc/ghi DOM cục bộ; không polling network, không gửi request hàng loạt, không retry để tranh slot hay vượt rate-limit.
+- **Không tự đồng ý thay người dùng:** luôn skip `checkbox`, `radio`, `switch` và các control mang ý nghĩa đồng ý điều khoản, chính sách, xác nhận, marketing hoặc cam kết — kể cả khi có nhãn/giá trị có thể suy đoán được.
+- **Không vượt qua field ẩn:** luôn skip input có `type="hidden"`, phần tử bị `hidden`, `aria-hidden="true"`, `display: none`, `visibility: hidden`, hoặc không còn hiển thị/thao tác được. Extension không đổi CSS, không mở conditional question, không bỏ thuộc tính ẩn và không ghi giá trị vào các field đó.
+- Nếu không xác định chắc chắn field có an toàn để điền hay không, Policy Gate trả về `skip`; overlay phải nêu lý do để người dùng tự xử lý.
+
+```
+SCAN → MATCH → POLICY GATE → FILL → VERIFY → READY
+                         │
+                         └── skip + ghi lý do vào overlay
+```
 
 ```
 1. SCAN     : adapter.findQuestions() → DetectedField[]
 2. MATCH    : với mỗi field, gom signal → matcher.scoreField() → gán candidateType + confidence
-3. FILL     : nếu confidence ≥ 80 và profile có giá trị tương ứng → filler.setNativeValue()
-4. VERIFY   : đọc lại giá trị, so khớp chuẩn hoá (trim, format phone/date) → cập nhật status
-5. READY    : cập nhật overlay UI, liệt kê field đã điền / bỏ qua / cần xem lại
-6. (User)   : tự rà lại overlay, tự bấm nút Submit gốc của form — extension không đụng vào nút này
+3. POLICY GATE: chỉ cho phép text field hiển thị và an toàn; checkbox/điều khoản, control xác nhận và field ẩn → skip
+4. FILL     : nếu Policy Gate cho phép, confidence ≥ 80 và profile có giá trị tương ứng → filler.setNativeValue()
+5. VERIFY   : đọc lại giá trị, so khớp chuẩn hoá (trim, format phone/date) → cập nhật status
+6. READY    : cập nhật overlay UI, liệt kê field đã điền / bỏ qua / cần xem lại
+7. (User)   : tự rà lại overlay, tự bấm nút Submit gốc của form — extension không đụng vào nút này
 ```
 
 **Về tự động hoá "submit":** extension chủ động KHÔNG có tính năng click nút submit, kể cả optional. Nút "SUBMIT" trong UI (nếu có) chỉ nên hiểu là **"tôi đã xem xong, đóng overlay"**, không phải hành động gửi form. Nút gửi thật sự luôn là nút gốc trên trang, do người dùng tự bấm — điều này vừa đúng yêu cầu của bạn, vừa tránh rủi ro vi phạm điều khoản dịch vụ của các trang tổ chức đăng ký.
@@ -408,7 +424,7 @@ Lưu ý:
 
 |Loại test|Công cụ|Nội dung|
 |---|---|---|
-|Unit|Vitest/Jest|normalizer (bỏ dấu, chuẩn hoá), matcher (alias + confidence), negative pattern|
+|Unit|Vitest/Jest|normalizer (bỏ dấu, chuẩn hoá), matcher (alias + confidence), negative pattern, Policy Gate (checkbox/điều khoản và field ẩn luôn bị skip)|
 |Fixture-based|Vitest + jsdom|Load HTML mẫu của Form A/B/C trong context.md → assert field được match đúng type|
 |Integration thủ công|Trình duyệt thật|Test trên 1 Google Form thật (câu hỏi text ngắn), kiểm tra verify không bị React revert giá trị|
 |Regression|Snapshot alias dictionary|Đảm bảo thêm alias mới không phá vỡ case cũ (ví dụ "Name" vẫn ở ngưỡng thấp, không đẩy false positive)|
