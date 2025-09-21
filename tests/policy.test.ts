@@ -27,8 +27,10 @@ describe("autofill policy", () => {
     expect(isAutoFillPermitted("UNKNOWN", "CHECKBOX")).toBe(false);
   });
 
-  it("permits gender only when the control is a radio group", () => {
+  it("permits gender choices only through safe choice controls", () => {
     expect(isAutoFillPermitted("GENDER", "RADIO")).toBe(true);
+    expect(isAutoFillPermitted("GENDER", "CHECKBOX")).toBe(true);
+    expect(isAutoFillPermitted("GENDER", "CUSTOM_SELECT")).toBe(true);
     expect(isAutoFillPermitted("GENDER", "INPUT")).toBe(false);
   });
 

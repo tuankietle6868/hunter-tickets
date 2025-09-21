@@ -14,6 +14,12 @@ import {
 } from "./policy";
 import { isCssHidden } from "./visibility";
 import { acceptsFormattedValue } from "./inputConstraints";
+import {
+  fillCustomSelectByText,
+  fillMultiCheckboxGroup,
+  verifyCustomSelectByText,
+  verifyMultiCheckboxGroup,
+} from "./choiceControls";
 import { createStableElementLocator, resolveLiveElement } from "./liveElement";
 import { detectedFieldCache, type FieldGroup } from "./fieldCache";
 import { logInstantFieldDuration, performanceNow } from "./performance";
@@ -264,6 +270,18 @@ export async function runGenericAutofill(
         const formattedValue = formatValueForInput(value, match.type, input);
         if (!acceptsFormattedValue(input, formattedValue)) {
           detectedField.status = "format_mismatch";
+          return detectedField;
+        }
+        if (input instanceof HTMLInputElement && input.type === "checkbox") {
+          const success = fillMultiCheckboxGroup(input, formattedValue);
+          detectedField.status =
+            success && verifyMultiCheckboxGroup(input, formattedValue) ? "filled" : "verify_failed";
+          return detectedField;
+        }
+        if (controlType === "CUSTOM_SELECT") {
+          const success = await fillCustomSelectByText(input, formattedValue);
+          detectedField.status =
+            success && verifyCustomSelectByText(input, formattedValue) ? "filled" : "verify_failed";
           return detectedField;
         }
         if (hasExistingValue(input)) {

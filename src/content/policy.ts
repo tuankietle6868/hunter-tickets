@@ -23,7 +23,12 @@ const AUTO_FILL_FIELD_TYPE_SET = new Set<FieldType>(AUTO_FILL_FIELD_TYPES);
  */
 export function isAutoFillPermitted(fieldType: FieldType, controlType: ControlType): boolean {
   if (!AUTO_FILL_FIELD_TYPE_SET.has(fieldType)) return false;
-  return fieldType !== "GENDER" || controlType === "RADIO";
+  return (
+    fieldType !== "GENDER" ||
+    controlType === "RADIO" ||
+    controlType === "CHECKBOX" ||
+    controlType === "CUSTOM_SELECT"
+  );
 }
 
 const HARD_BLOCKED_LABEL = /dong y|xac nhan|cam ket|dieu khoan|consent|agree/u;

@@ -269,6 +269,64 @@ describe("generic autofill pipeline", () => {
     ]);
   });
 
+  it("fills a text-matched generic combobox without treating it as a text input", async () => {
+    document.body.innerHTML = `
+      <form>
+        <label for="gender-combobox">Giới tính</label>
+        <button id="gender-combobox" type="button" role="combobox" aria-controls="gender-options">Chọn giới tính</button>
+        <div id="gender-options" role="listbox" hidden>
+          <button role="option">Nam</button><button role="option">Nữ</button>
+        </div>
+      </form>
+    `;
+    const control = document.querySelector<HTMLElement>("#gender-combobox")!;
+    const listbox = document.querySelector<HTMLElement>("#gender-options")!;
+    const form = document.querySelector<HTMLFormElement>("form")!;
+    let didSubmit = false;
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      didSubmit = true;
+    });
+    const female = Array.from(listbox.querySelectorAll<HTMLElement>("[role='option']")).find(
+      (option) => option.textContent === "Nữ",
+    )!;
+    control.addEventListener("click", () => listbox.removeAttribute("hidden"));
+    female.addEventListener("click", () => {
+      female.setAttribute("aria-selected", "true");
+      control.textContent = "Nữ";
+    });
+
+    const results = await runGenericAutofill({ gender: "Nữ" });
+
+    expect(results[0]).toMatchObject({ candidateType: "GENDER", status: "filled" });
+    expect(control.textContent).toBe("Nữ");
+    expect(didSubmit).toBe(false);
+  });
+
+  it("fills all selected values of a multi-checkbox group while terms remain blocked", async () => {
+    document.body.innerHTML = `
+      <form>
+        <fieldset><legend>Giới tính</legend>
+          <label><input type="checkbox" name="gender" value="male" /> Nam</label>
+          <label><input type="checkbox" name="gender" value="female" /> Nữ</label>
+        </fieldset>
+        <label>Đồng ý điều khoản <input type="checkbox" name="terms" /></label>
+      </form>
+    `;
+
+    const results = await runGenericAutofill({ gender: "Nam; Nữ" });
+
+    expect(Array.from(document.querySelectorAll<HTMLInputElement>('[name="gender"]'), (input) => input.checked)).toEqual([
+      true,
+      true,
+    ]);
+    expect(document.querySelector<HTMLInputElement>("[name='terms']")?.checked).toBe(false);
+    expect(results.map(({ candidateType, status }) => ({ candidateType, status }))).toEqual([
+      { candidateType: "GENDER", status: "filled" },
+      { candidateType: "UNKNOWN", status: "policy_blocked" },
+    ]);
+  });
+
   it("reports boolean and multi-choice checkbox modes", async () => {
     document.body.innerHTML = `
       <form>
