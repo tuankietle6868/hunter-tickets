@@ -1,6 +1,7 @@
 import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
-import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
 import { MicrosoftFormsAdapter } from "./adapters/microsoftFormsAdapter";
+import { ReactVueAdapter } from "./adapters/reactVueAdapter";
+import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
 import { findDynamicFieldRoot, observeDynamicFields } from "./dynamicFields";
 import { scrollToAndHighlightField, showAutofillOverlay } from "./overlayUI";
 import { runGenericAutofill } from "./pipeline";
@@ -27,6 +28,7 @@ async function runContentScript(): Promise<void> {
     ? getGoogleFormsAdapterOrShowFallback(overlayAutoEnabled)
     : undefined;
   const microsoftFormsAdapter = isMicrosoftFormsPage() ? new MicrosoftFormsAdapter() : undefined;
+  const genericFrameworkAdapter = new ReactVueAdapter();
 
   if (onGoogleFormsPage && !googleFormsAdapter) {
     return;
@@ -54,12 +56,16 @@ async function runContentScript(): Promise<void> {
       { pendingCascade },
     );
   };
-  const results = await runGenericAutofill(profile, googleFormsAdapter ?? microsoftFormsAdapter, {
-    onIndependentFieldComplete: (field) => {
-      independentResults.push(field);
-      renderOverlay(independentResults, true);
+  const results = await runGenericAutofill(
+    profile,
+    googleFormsAdapter ?? microsoftFormsAdapter ?? genericFrameworkAdapter,
+    {
+      onIndependentFieldComplete: (field) => {
+        independentResults.push(field);
+        renderOverlay(independentResults, true);
+      },
     },
-  });
+  );
   observeDynamicFieldChanges();
   renderOverlay(results);
   console.log("[Smart Form Autofill] Fill results:", results);
