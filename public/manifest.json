@@ -7,7 +7,9 @@
   "host_permissions": ["https://docs.google.com/forms/*"],
   "optional_host_permissions": [
     "https://*.ticketbox.vn/*",
-    "https://*.cticket.vn/*"
+    "https://*.cticket.vn/*",
+    "https://forms.office.com/*",
+    "https://forms.cloud.microsoft/*"
   ],
   "action": {
     "default_popup": "popup.html"
@@ -21,7 +23,9 @@
       "matches": [
         "https://docs.google.com/forms/*",
         "https://*.ticketbox.vn/*",
-        "https://*.cticket.vn/*"
+        "https://*.cticket.vn/*",
+        "https://forms.office.com/*",
+        "https://forms.cloud.microsoft/*"
       ],
       "js": ["content/index.js"],
       "run_at": "document_idle"

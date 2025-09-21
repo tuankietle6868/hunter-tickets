@@ -83,6 +83,8 @@ type ChromeApi = {
 const optionalDomainLabels: Record<string, string> = {
   "ticketbox.vn": "Ticketbox",
   "cticket.vn": "CTicket",
+  "forms.office.com": "Microsoft Forms",
+  "forms.cloud.microsoft": "Microsoft Forms",
 };
 
 function getOptionalDomain(hostname: string): string | undefined {

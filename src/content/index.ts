@@ -1,5 +1,6 @@
 import { getProfile, isOverlayAutoEnabled } from "../shared/storage";
 import { getGoogleFormsAdapterOrShowFallback, isGoogleFormsPage } from "./googleFormsFallback";
+import { MicrosoftFormsAdapter } from "./adapters/microsoftFormsAdapter";
 import { findDynamicFieldRoot, observeDynamicFields } from "./dynamicFields";
 import { scrollToAndHighlightField, showAutofillOverlay } from "./overlayUI";
 import { runGenericAutofill } from "./pipeline";
@@ -25,6 +26,7 @@ async function runContentScript(): Promise<void> {
   const googleFormsAdapter = onGoogleFormsPage
     ? getGoogleFormsAdapterOrShowFallback(overlayAutoEnabled)
     : undefined;
+  const microsoftFormsAdapter = isMicrosoftFormsPage() ? new MicrosoftFormsAdapter() : undefined;
 
   if (onGoogleFormsPage && !googleFormsAdapter) {
     return;
@@ -52,7 +54,7 @@ async function runContentScript(): Promise<void> {
       { pendingCascade },
     );
   };
-  const results = await runGenericAutofill(profile, googleFormsAdapter, {
+  const results = await runGenericAutofill(profile, googleFormsAdapter ?? microsoftFormsAdapter, {
     onIndependentFieldComplete: (field) => {
       independentResults.push(field);
       renderOverlay(independentResults, true);
@@ -61,6 +63,10 @@ async function runContentScript(): Promise<void> {
   observeDynamicFieldChanges();
   renderOverlay(results);
   console.log("[Smart Form Autofill] Fill results:", results);
+}
+
+function isMicrosoftFormsPage(location: Location = window.location): boolean {
+  return location.hostname === "forms.office.com" || location.hostname === "forms.cloud.microsoft";
 }
 
 void runContentScript();
