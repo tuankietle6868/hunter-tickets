@@ -268,7 +268,7 @@ export interface IFormAdapter {
 
 ### 5.1 GenericHtmlAdapter
 
-- `findQuestions()` chỉ xét text input/textarea đang hiển thị; loại trừ `hidden`, submit, checkbox/radio/switch và phần tử không thao tác được theo Policy Gate.
+- `findQuestions()` chỉ xét control đang hiển thị; loại trừ `hidden`, submit và phần tử không thao tác được. Checkbox/radio được nhận diện để Policy Gate quyết định: checkbox đồng ý/điều khoản luôn skip, còn control lựa chọn được hỗ trợ phải có policy riêng.
 - Text câu hỏi lấy từ `<label for>` hoặc label cha gần nhất.
 - `setValue` dùng native setter (chi tiết mục 6).
 
@@ -311,7 +311,7 @@ function setNativeValue(element: HTMLInputElement | HTMLTextAreaElement, value: 
 
 - **Không auto-submit:** extension không click, không trigger và không gọi bất kỳ cơ chế gửi form nào. Người dùng tự kiểm tra rồi bấm nút gửi gốc.
 - **Không spam request:** extension chỉ đọc/ghi DOM cục bộ; không polling network, không gửi request hàng loạt, không retry để tranh slot hay vượt rate-limit.
-- **Không tự đồng ý thay người dùng:** luôn skip `checkbox`, `radio`, `switch` và các control mang ý nghĩa đồng ý điều khoản, chính sách, xác nhận, marketing hoặc cam kết — kể cả khi có nhãn/giá trị có thể suy đoán được.
+- **Không tự đồng ý thay người dùng:** luôn skip checkbox/switch và các control mang ý nghĩa đồng ý điều khoản, chính sách, xác nhận, marketing hoặc cam kết — kể cả khi có nhãn/giá trị có thể suy đoán được. Radio Giới tính chỉ được điền khi policy của control lựa chọn cho phép và có option khớp chính xác.
 - **Không vượt qua field ẩn:** luôn skip input có `type="hidden"`, phần tử bị `hidden`, `aria-hidden="true"`, `display: none`, `visibility: hidden`, hoặc không còn hiển thị/thao tác được. Extension không đổi CSS, không mở conditional question, không bỏ thuộc tính ẩn và không ghi giá trị vào các field đó.
 - Nếu không xác định chắc chắn field có an toàn để điền hay không, Policy Gate trả về `skip`; overlay phải nêu lý do để người dùng tự xử lý.
 
@@ -324,7 +324,7 @@ SCAN → MATCH → POLICY GATE → FILL → VERIFY → READY
 ```
 1. SCAN     : adapter.findQuestions() → DetectedField[]
 2. MATCH    : với mỗi field, gom signal → matcher.scoreField() → gán candidateType + confidence
-3. POLICY GATE: chỉ cho phép text field hiển thị và an toàn; checkbox/điều khoản, control xác nhận và field ẩn → skip
+3. POLICY GATE: chỉ cho phép control hiển thị và an toàn; checkbox đồng ý/điều khoản, control xác nhận không thuộc profile và field ẩn → skip
 4. FILL     : nếu Policy Gate cho phép, confidence ≥ 80 và profile có giá trị tương ứng → filler.setNativeValue()
 5. VERIFY   : đọc lại giá trị, so khớp chuẩn hoá (trim, format phone/date) → cập nhật status
 6. READY    : cập nhật overlay UI, liệt kê field đã điền / bỏ qua / cần xem lại
@@ -373,7 +373,7 @@ SCAN → MATCH → POLICY GATE → FILL → VERIFY → READY
   "manifest_version": 3,
   "name": "Smart Form Autofill",
   "version": "0.1.0",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage"],
   "host_permissions": ["https://docs.google.com/forms/*"],
   "optional_host_permissions": [
     "https://*.ticketbox.vn/*",
@@ -424,10 +424,28 @@ Lưu ý:
 
 |Loại test|Công cụ|Nội dung|
 |---|---|---|
-|Unit|Vitest/Jest|normalizer (bỏ dấu, chuẩn hoá), matcher (alias + confidence), negative pattern, Policy Gate (checkbox/điều khoản và field ẩn luôn bị skip)|
+|Unit|Vitest/Jest|normalizer (bỏ dấu, chuẩn hoá), matcher (alias + confidence), negative pattern, Policy Gate (checkbox đồng ý/điều khoản và field ẩn luôn bị skip)|
 |Fixture-based|Vitest + jsdom|Load HTML mẫu của Form A/B/C trong context.md → assert field được match đúng type|
-|Integration thủ công|Trình duyệt thật|Test trên 1 Google Form thật (câu hỏi text ngắn), kiểm tra verify không bị React revert giá trị|
+|Integration thủ công|Trình duyệt thật|Chạy checklist T7.3 trên các form thật; kiểm tra verify không bị framework của form revert giá trị|
 |Regression|Snapshot alias dictionary|Đảm bảo thêm alias mới không phá vỡ case cũ (ví dụ "Name" vẫn ở ngưỡng thấp, không đẩy false positive)|
+
+---
+
+### T7.3 — Checklist test trên form thật
+
+Không dùng tiêu chí mơ hồ như "test 5 form bất kỳ". Mỗi lần QA release phải ghi lại URL/domain (hoặc mã nội bộ của form), trình duyệt, thời điểm test, ảnh overlay trước khi người dùng submit, và kết quả của đủ 7 tình huống dưới đây. Chỉ dùng form do đội kiểm soát hoặc form có quyền thử nghiệm; không submit dữ liệu cá nhân thật.
+
+|#|Tình huống bắt buộc|Thao tác và tiêu chí đạt|
+|---|---|---|
+|1|Cascading **Tỉnh → Xã**|Chọn profile/mapping có giá trị khớp. Extension chọn Tỉnh trước, chờ Xã được nạp và chỉ chọn Xã khi option xuất hiện; không gửi request riêng. Nếu quá timeout, dừng ở Xã, báo `cascade_timeout` trên overlay và không thử chọn cưỡng bức.|
+|2|DOB dạng **3 select** Ngày/Tháng/Năm|Dùng ngày sinh profile hợp lệ. Cả ba ô nhận đúng giá trị sau verify; không coi ba select độc lập là cascading và không để ô nào trống/sai thứ tự.|
+|3|DOB dạng **text tự do**|Test ít nhất một định dạng mà form chấp nhận (ví dụ `DD/MM/YYYY`). Giá trị sau verify đúng định dạng của field; nếu không xác định được định dạng hoặc verify thất bại, field bị báo để người dùng tự nhập, không tự submit.|
+|4|Radio **Giới tính**|Với giá trị profile có option khớp, chỉ một radio đúng được chọn và verify thành công. Với option không khớp, không radio nào bị chọn; overlay báo cần xử lý thủ công.|
+|5|Cặp **Email / Xác nhận Email**|Cùng email profile được điền vào cả hai field và giữ nguyên sau verify. Chỉ cặp nhận diện rõ là xác nhận email mới được phép điền lặp; field trùng loại khác vẫn phải được đánh dấu `duplicate_manual`.|
+|6|Checkbox **điều khoản**|Chạy autofill khi checkbox chưa được tick. Checkbox phải vẫn chưa tick, có trạng thái `policy_blocked`/skip trên overlay; người dùng tự quyết định tick hay không. Đây là kiểm tra bắt buộc của Policy Gate.|
+|7|Đăng ký nhóm, nhiều người có field trùng loại|Với ít nhất hai người có cùng loại field (ví dụ Họ tên hoặc SĐT), chỉ field đầu tiên được điền tự động. Các field trùng còn lại không được sao chép dữ liệu profile và được đánh dấu `duplicate_manual` để người dùng nhập từng người.|
+
+**Điều kiện hoàn thành T7.3:** cả 7 hàng đều pass trên form thật; mọi lỗi, timeout hoặc sai match phải có ảnh/chụp DOM tối thiểu và được mở regression test hoặc ghi rõ lý do loại trừ trước khi đóng QA.
 
 ---
 
@@ -467,6 +485,12 @@ Lưu ý:
 
 - Microsoft Forms
 - Generic React/Vue form khác ngoài Google
+
+**Giai đoạn 7 — QA & đóng gói**
+
+- T7.1: Hoàn thiện README và Policy Gate.
+- T7.2: Rà soát manifest, chỉ giữ quyền thực sự được dùng.
+- T7.3: Thực hiện đầy đủ checklist test form thật ở mục 10; lưu bằng chứng kết quả trước khi phát hành.
 
 ---
 
