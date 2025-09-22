@@ -422,6 +422,19 @@ Lưu ý:
 
 ## 10. Testing
 
+### HTML manual fixtures
+
+Serve the repository root before manually testing the extension. This avoids
+the extra `file://` permissions required by MV3 content scripts:
+
+```bash
+npm run serve:fixtures
+```
+
+Then open [the fixture directory](http://localhost:4173/tests/fixtures/html/).
+The server binds only to `127.0.0.1` and uses port `4173`. Each fixture belongs
+in `tests/fixtures/html/`, next to its matching `expected.json` file.
+
 |Loại test|Công cụ|Nội dung|
 |---|---|---|
 |Unit|Vitest/Jest|normalizer (bỏ dấu, chuẩn hoá), matcher (alias + confidence), negative pattern, Policy Gate (checkbox đồng ý/điều khoản và field ẩn luôn bị skip)|
