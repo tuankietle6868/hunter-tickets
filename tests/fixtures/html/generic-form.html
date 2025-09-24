@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Form Autofill — Generic form</title>
+  </head>
+  <body>
+    <main>
+      <h1>Form A — Đăng ký tình nguyện viên</h1>
+      <form>
+        <p>
+          <label for="full-name">1. Họ và tên *</label>
+          <input id="full-name" name="fullName" type="text" />
+        </p>
+        <p>
+          <label>Số điện thoại * <input name="phone" type="tel" /></label>
+        </p>
+        <p>
+          <label for="email">3. Email liên hệ *</label>
+          <input id="email" name="email" type="email" />
+        </p>
+        <p>
+          <label for="address">4. Địa chỉ liên hệ</label>
+          <textarea id="address" name="address"></textarea>
+        </p>
+        <p>
+          <label for="date-of-birth">5. Ngày tháng năm sinh</label>
+          <input id="date-of-birth" name="dateOfBirth" type="date" />
+        </p>
+        <p>
+          <label for="date-of-birth-text">6. Ngày sinh (dạng text)</label>
+          <input
+            id="date-of-birth-text"
+            name="birthDateText"
+            type="text"
+            placeholder="dd/mm/yyyy"
+          />
+        </p>
+        <p>
+          <label for="gender-text">7. Giới tính (dạng text)</label>
+          <input id="gender-text" name="genderText" type="text" />
+        </p>
+        <fieldset>
+          <legend>8. Giới tính (radio)</legend>
+          <label><input type="radio" name="gender" value="male" /> Nam</label>
+          <label><input type="radio" name="gender" value="female" /> Nữ</label>
+          <label><input type="radio" name="gender" value="other" /> Khác</label>
+        </fieldset>
+      </form>
+    </main>
+  </body>
+</html>

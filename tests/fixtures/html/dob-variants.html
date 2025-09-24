@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — DOB variants</title>
+    <style>
+      body { max-width: 720px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; }
+      fieldset { display: grid; gap: 12px; margin: 0 0 18px; padding: 16px; }
+      .date-parts { display: flex; gap: 8px; }
+      input, select { min-height: 36px; padding: 4px 8px; }
+      label { display: grid; gap: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Test các biến thể Ngày sinh</h1>
+    <p>Dữ liệu mẫu để autofill: <strong>2000-05-12</strong>. Không có submit tự động.</p>
+    <form>
+      <fieldset>
+        <legend>1. Native date</legend>
+        <label>Ngày sinh <input type="date" name="native-birth-date" /></label>
+      </fieldset>
+      <fieldset>
+        <legend>2. Ngày sinh — Ngày / Tháng / Năm độc lập</legend>
+        <div class="date-parts">
+          <label>Ngày <select name="birth-day"><option value="">Ngày</option><option value="12">12</option></select></label>
+          <label>Tháng <select name="birth-month"><option value="">Tháng</option><option value="5">5</option></select></label>
+          <label>Năm <select name="birth-year"><option value="">Năm</option><option value="2000">2000</option></select></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>3. Năm sinh độc lập</legend>
+        <label>Năm sinh <select name="standalone-birth-year"><option value="">Năm</option><option value="2000">2000</option></select></label>
+      </fieldset>
+      <fieldset>
+        <legend>4. Text date có format khai báo</legend>
+        <label>Ngày sinh (DD/MM/YYYY) <input type="text" placeholder="dd/mm/yyyy" /></label>
+        <label>Ngày sinh (DD-MM-YYYY) <input type="text" placeholder="dd-mm-yyyy" /></label>
+        <label>Ngày sinh (YYYY-MM-DD) <input type="text" pattern="\d{4}-\d{2}-\d{2}" placeholder="yyyy-mm-dd" /></label>
+      </fieldset>
+    </form>
+  </body>
+</html>
