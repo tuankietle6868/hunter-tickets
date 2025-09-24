@@ -428,12 +428,16 @@ Serve the repository root before manually testing the extension. This avoids
 the extra `file://` permissions required by MV3 content scripts:
 
 ```bash
+npm run build:dev
 npm run serve:fixtures
 ```
 
 Then open [the fixture directory](http://localhost:4173/tests/fixtures/html/).
 The server binds only to `127.0.0.1` and uses port `4173`. Each fixture belongs
-in `tests/fixtures/html/`, next to its matching `expected.json` file.
+in `tests/fixtures/html/`, next to its matching `expected.json` file. Load the
+`dist/` folder as the unpacked extension after `build:dev`; it adds
+`http://localhost:*/*` only to the development build's content-script matches.
+The normal `npm run build` manifest remains publish-safe and excludes it.
 
 |Loại test|Công cụ|Nội dung|
 |---|---|---|

@@ -1,7 +1,32 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+const LOCALHOST_MATCH = "http://localhost:*/*";
+
+export default defineConfig(({ mode }) => ({
+  plugins:
+    mode === "development"
+      ? [
+          {
+            name: "development-localhost-content-script-match",
+            closeBundle() {
+              const manifestPath = resolve(__dirname, "dist/manifest.json");
+              const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+                content_scripts: Array<{ matches: string[] }>;
+              };
+
+              for (const contentScript of manifest.content_scripts) {
+                if (!contentScript.matches.includes(LOCALHOST_MATCH)) {
+                  contentScript.matches.push(LOCALHOST_MATCH);
+                }
+              }
+
+              writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+            },
+          },
+        ]
+      : [],
   build: {
     outDir: "dist",
     emptyOutDir: true,
@@ -20,4 +45,4 @@ export default defineConfig({
   test: {
     environment: "jsdom",
   },
-});
+}));

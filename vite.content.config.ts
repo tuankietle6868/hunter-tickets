@@ -6,6 +6,9 @@ import { defineConfig } from "vite";
  * Build this entry separately so every dependency is bundled into one IIFE.
  */
 export default defineConfig({
+  // The primary build already copies `public/`. Do not overwrite its generated
+  // development manifest during the separate content-script build.
+  publicDir: false,
   build: {
     outDir: "dist",
     emptyOutDir: false,
