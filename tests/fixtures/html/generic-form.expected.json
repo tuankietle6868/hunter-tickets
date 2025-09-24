@@ -1,0 +1,45 @@
+{
+  "fixture": "generic-form.html",
+  "fields": [
+    {
+      "field": "#full-name",
+      "expectedType": "FULL_NAME",
+      "shouldFill": true
+    },
+    {
+      "field": "input[name=\"phone\"]",
+      "expectedType": "PHONE",
+      "shouldFill": true
+    },
+    {
+      "field": "#email",
+      "expectedType": "EMAIL",
+      "shouldFill": true
+    },
+    {
+      "field": "#address",
+      "expectedType": "ADDRESS",
+      "shouldFill": true
+    },
+    {
+      "field": "#date-of-birth",
+      "expectedType": "DATE_OF_BIRTH",
+      "shouldFill": true
+    },
+    {
+      "field": "#date-of-birth-text",
+      "expectedType": "DATE_OF_BIRTH",
+      "shouldFill": true
+    },
+    {
+      "field": "#gender-text",
+      "expectedType": "GENDER",
+      "shouldFill": true
+    },
+    {
+      "field": "input[name=\"gender\"]",
+      "expectedType": "GENDER",
+      "shouldFill": true
+    }
+  ]
+}
