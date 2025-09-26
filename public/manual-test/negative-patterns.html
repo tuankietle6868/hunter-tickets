@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Negative patterns</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      input { box-sizing: border-box; width: 100%; min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .expected-fill { color: #1a7f37; }
+      .expected-skip { color: #cf222e; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture negative pattern cho Họ và tên</h1>
+      <p class="note">Chỉ trường hồ sơ cá nhân được phép autofill. Không có submit tự động.</p>
+
+      <form id="negative-patterns-form" novalidate>
+        <label class="expected-fill">
+          Họ và tên
+          <input data-expected-type="FULL_NAME" data-expected-status="filled" type="text" autocomplete="name" placeholder="Nhập họ và tên" />
+        </label>
+
+        <label class="expected-skip">
+          Tên công ty
+          <input data-expected-status="skipped" type="text" placeholder="Nhập tên công ty" />
+        </label>
+
+        <label class="expected-skip">
+          Tên người nhận
+          <input data-expected-status="skipped" type="text" placeholder="Nhập tên người nhận" />
+        </label>
+
+        <label class="expected-skip">
+          Tên đăng nhập
+          <input data-expected-status="skipped" type="text" placeholder="Nhập tên đăng nhập" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> “Họ và tên” match <code>FULL_NAME</code> và được điền. “Tên công ty”, “Tên người nhận”, “Tên đăng nhập” không được map thành <code>FULL_NAME</code> vì negative pattern.</p>
+    </main>
+  </body>
+</html>
