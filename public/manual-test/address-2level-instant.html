@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Instant Tỉnh → Xã cascade</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #1a7f37; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture cascade 2 cấp: Tỉnh → Xã</h1>
+      <p class="note">Khi Tỉnh thay đổi, JavaScript thay options của Xã ngay trong cùng event <code>change</code>, không dùng <code>setTimeout</code> hay request mạng.</p>
+
+      <form id="instant-address-form" novalidate>
+        <label for="province">Tỉnh
+          <select id="province" name="province">
+            <option value="">-- Chọn tỉnh --</option>
+            <option value="79">Hồ Chí Minh</option>
+            <option value="01">Hà Nội</option>
+          </select>
+        </label>
+
+        <label for="ward">Xã
+          <select id="ward" name="ward">
+            <option value="">-- Chọn xã --</option>
+          </select>
+        </label>
+
+        <output id="cascade-status" aria-live="polite">Chưa chọn Tỉnh.</output>
+      </form>
+    </main>
+
+    <script>
+      const province = document.querySelector("#province");
+      const ward = document.querySelector("#ward");
+      const status = document.querySelector("#cascade-status");
+      const wardsByProvince = {
+        "79": [["26734", "Phường Bến Nghé"], ["26740", "Phường Bến Thành"]],
+        "01": [["00004", "Phường Hoàn Kiếm"], ["00007", "Phường Cửa Nam"]],
+      };
+
+      province.addEventListener("change", () => {
+        const wards = wardsByProvince[province.value] || [];
+        ward.replaceChildren(new Option("-- Chọn xã --", ""));
+        wards.forEach(([value, text]) => ward.add(new Option(text, value)));
+        status.textContent = wards.length
+          ? `Đã nạp đồng bộ ${wards.length} option Xã cho ${province.options[province.selectedIndex].text}.`
+          : "Chưa chọn Tỉnh.";
+      });
+    </script>
+  </body>
+</html>
