@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Form A / B / C</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 960px; margin: 40px auto; padding: 0 20px 48px; }
+      .intro { margin-bottom: 24px; }
+      .forms { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; }
+      form { display: grid; gap: 14px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      h1, h2 { margin-top: 0; }
+      h2 { font-size: 1.25rem; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      input, textarea { box-sizing: border-box; width: 100%; min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      textarea { min-height: 82px; resize: vertical; }
+      .form-note { margin: -6px 0 0; color: #57606a; font-size: .875rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture cơ bản: Form A / B / C</h1>
+      <p class="intro">Ba form độc lập cùng dùng sáu trường hồ sơ, nhưng có thứ tự khác nhau. Dùng để xác minh extension nhận diện theo tín hiệu field thay vì vị trí DOM. Trang không tự gửi form.</p>
+
+      <section class="forms" aria-label="Ba form kiểm thử độc lập">
+        <form id="form-a" novalidate>
+          <div>
+            <h2>Form A</h2>
+            <p class="form-note">Thứ tự chuẩn: họ tên → CCCD → SĐT → email → ngày sinh → địa chỉ.</p>
+          </div>
+          <label for="a-full-name">1. Họ và tên *<input id="a-full-name" name="fullName" type="text" autocomplete="name" placeholder="Nhập họ và tên" /></label>
+          <label for="a-id-number">2. CCCD *<input id="a-id-number" name="cccd" type="text" inputmode="numeric" placeholder="Nhập số CCCD" /></label>
+          <label for="a-phone">3. Số điện thoại (bắt buộc)<input id="a-phone" name="phone" type="tel" autocomplete="tel" placeholder="Nhập số điện thoại liên hệ" /></label>
+          <label for="a-email">4. Email liên hệ *<input id="a-email" name="email" type="email" autocomplete="email" placeholder="ten@email.com" /></label>
+          <label for="a-date-of-birth">5. Ngày tháng năm sinh<input id="a-date-of-birth" name="dateOfBirth" type="date" autocomplete="bday" /></label>
+          <label for="a-address">6. Địa chỉ liên hệ (bắt buộc)<textarea id="a-address" name="address" autocomplete="street-address" placeholder="Nhập địa chỉ"></textarea></label>
+        </form>
+
+        <form id="form-b" novalidate>
+          <div>
+            <h2>Form B</h2>
+            <p class="form-note">Thứ tự đảo nhóm liên hệ: email → địa chỉ → CCCD → họ tên → SĐT → ngày sinh.</p>
+          </div>
+          <label for="b-email">1. Email liên hệ *<input id="b-email" name="email" type="email" autocomplete="email" placeholder="ten@email.com" /></label>
+          <label for="b-address">2. Địa chỉ liên hệ (bắt buộc)<textarea id="b-address" name="address" autocomplete="street-address" placeholder="Nhập địa chỉ"></textarea></label>
+          <label for="b-id-number">3. CCCD *<input id="b-id-number" name="cccd" type="text" inputmode="numeric" placeholder="Nhập số CCCD" /></label>
+          <label for="b-full-name">4. Họ và tên *<input id="b-full-name" name="fullName" type="text" autocomplete="name" placeholder="Nhập họ và tên" /></label>
+          <label for="b-phone">5. Số điện thoại (bắt buộc)<input id="b-phone" name="phone" type="tel" autocomplete="tel" placeholder="Nhập số điện thoại liên hệ" /></label>
+          <label for="b-date-of-birth">6. Ngày tháng năm sinh<input id="b-date-of-birth" name="dateOfBirth" type="date" autocomplete="bday" /></label>
+        </form>
+
+        <form id="form-c" novalidate>
+          <div>
+            <h2>Form C</h2>
+            <p class="form-note">Thứ tự bắt đầu bằng ngày sinh và địa chỉ: ngày sinh → địa chỉ → SĐT → họ tên → CCCD → email.</p>
+          </div>
+          <label for="c-date-of-birth">1. Ngày tháng năm sinh<input id="c-date-of-birth" name="dateOfBirth" type="date" autocomplete="bday" /></label>
+          <label for="c-address">2. Địa chỉ liên hệ (bắt buộc)<textarea id="c-address" name="address" autocomplete="street-address" placeholder="Nhập địa chỉ"></textarea></label>
+          <label for="c-phone">3. Số điện thoại (bắt buộc)<input id="c-phone" name="phone" type="tel" autocomplete="tel" placeholder="Nhập số điện thoại liên hệ" /></label>
+          <label for="c-full-name">4. Họ và tên *<input id="c-full-name" name="fullName" type="text" autocomplete="name" placeholder="Nhập họ và tên" /></label>
+          <label for="c-id-number">5. CCCD *<input id="c-id-number" name="cccd" type="text" inputmode="numeric" placeholder="Nhập số CCCD" /></label>
+          <label for="c-email">6. Email liên hệ *<input id="c-email" name="email" type="email" autocomplete="email" placeholder="ten@email.com" /></label>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
