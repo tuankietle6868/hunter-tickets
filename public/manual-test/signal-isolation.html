@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Signal isolation</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 760px; margin: 40px auto; padding: 0 20px 48px; }
+      .cases { display: grid; gap: 14px; }
+      .case { padding: 16px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      .case h2 { margin: 0 0 4px; font-size: 1.1rem; }
+      .case p { margin: 0 0 12px; color: #57606a; font-size: .9rem; }
+      input { box-sizing: border-box; width: 100%; min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      table { width: 100%; margin-top: 28px; border-collapse: collapse; background: #fff; }
+      th, td { padding: 9px; text-align: left; border: 1px solid #d0d7de; }
+      th { background: #f6f8fa; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture cô lập tín hiệu match</h1>
+      <p>Mỗi control bên dưới chỉ mang một tín hiệu nhận diện có chủ đích. Không có submit tự động.</p>
+
+      <section class="cases" aria-label="Các case cô lập tín hiệu">
+        <article class="case">
+          <h2>1. Chỉ label</h2>
+          <p>Tín hiệu: <code>labelText</code> = “Họ và tên”.</p>
+          <label>Họ và tên<input data-case="label-only" data-expected-type="FULL_NAME" data-expected-confidence="90" type="text" /></label>
+        </article>
+
+        <article class="case">
+          <h2>2. Chỉ placeholder</h2>
+          <p>Tín hiệu: <code>placeholder</code> = “Email”.</p>
+          <input data-case="placeholder-only" data-expected-type="EMAIL" data-expected-confidence="60" type="text" placeholder="Email" />
+        </article>
+
+        <article class="case">
+          <h2>3. Chỉ aria-label</h2>
+          <p>Tín hiệu: <code>ariaLabel</code> = “Số điện thoại”.</p>
+          <input data-case="aria-label-only" data-expected-type="PHONE" data-expected-confidence="80" type="text" aria-label="Số điện thoại" />
+        </article>
+
+        <article class="case">
+          <h2>4. Chỉ autocomplete</h2>
+          <p>Tín hiệu: <code>autocomplete</code> = <code>bday</code>.</p>
+          <input data-case="autocomplete-only" data-expected-type="DATE_OF_BIRTH" data-expected-confidence="100" type="date" autocomplete="bday" />
+        </article>
+
+        <article class="case">
+          <h2>5. Chỉ name, không label/id</h2>
+          <p>Tín hiệu: <code>name</code> = <code>cccd</code>.</p>
+          <input data-case="name-only" data-expected-type="ID_NUMBER" data-expected-confidence="50" type="text" name="cccd" />
+        </article>
+      </section>
+
+      <h2>Confidence kỳ vọng</h2>
+      <table>
+        <thead><tr><th>Case</th><th>Type</th><th>Confidence</th><th>Phép tính</th></tr></thead>
+        <tbody>
+          <tr><td>Label</td><td>FULL_NAME</td><td>90</td><td>100 × 0.9</td></tr>
+          <tr><td>Placeholder</td><td>EMAIL</td><td>60</td><td>100 × 0.6</td></tr>
+          <tr><td>ARIA label</td><td>PHONE</td><td>80</td><td>100 × 0.8</td></tr>
+          <tr><td>Autocomplete</td><td>DATE_OF_BIRTH</td><td>100</td><td>100 × 1.0</td></tr>
+          <tr><td>Name</td><td>ID_NUMBER</td><td>50</td><td>100 × 0.5</td></tr>
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>
