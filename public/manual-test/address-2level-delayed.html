@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Delayed Tỉnh → Xã cascade</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #9a6700; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture cascade 2 cấp có độ trễ: Tỉnh → Xã</h1>
+      <p class="note">Tỉnh thay đổi sẽ xoá options Xã, đợi 800 ms giả lập API, rồi mới nạp và mở select Xã. Không có submit tự động.</p>
+
+      <form id="delayed-address-form" novalidate>
+        <label for="province">Tỉnh
+          <select id="province" name="province">
+            <option value="">-- Chọn tỉnh --</option>
+            <option value="79">Hồ Chí Minh</option>
+            <option value="01">Hà Nội</option>
+          </select>
+        </label>
+
+        <label for="ward">Xã
+          <select id="ward" name="ward" disabled>
+            <option value="">-- Chọn xã --</option>
+          </select>
+        </label>
+
+        <output id="cascade-status" aria-live="polite">Chưa chọn Tỉnh.</output>
+      </form>
+    </main>
+
+    <script>
+      const province = document.querySelector("#province");
+      const ward = document.querySelector("#ward");
+      const status = document.querySelector("#cascade-status");
+      const wardsByProvince = {
+        "79": [["26734", "Phường Bến Nghé"], ["26740", "Phường Bến Thành"]],
+        "01": [["00004", "Phường Hoàn Kiếm"], ["00007", "Phường Cửa Nam"]],
+      };
+      let pendingLoad;
+
+      province.addEventListener("change", () => {
+        clearTimeout(pendingLoad);
+        const selectedProvince = province.value;
+        const selectedProvinceText = province.options[province.selectedIndex].text;
+
+        ward.disabled = true;
+        ward.replaceChildren(new Option("-- Đang tải xã --", ""));
+        status.textContent = selectedProvince
+          ? `Đang tải Xã cho ${selectedProvinceText} (800 ms)…`
+          : "Chưa chọn Tỉnh.";
+
+        pendingLoad = setTimeout(() => {
+          // Ignore an outdated timer if the user selected another province meanwhile.
+          if (province.value !== selectedProvince) return;
+
+          const wards = wardsByProvince[selectedProvince] || [];
+          ward.replaceChildren(new Option("-- Chọn xã --", ""));
+          wards.forEach(([value, text]) => ward.add(new Option(text, value)));
+          ward.disabled = false;
+          status.textContent = `Đã nạp ${wards.length} option Xã sau 800 ms.`;
+        }, 800);
+      });
+    </script>
+  </body>
+</html>
