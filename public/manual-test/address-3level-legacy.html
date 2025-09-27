@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Legacy Tỉnh → Huyện → Xã cascade</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #1a7f37; font-weight: 600; }
+      #event-log { margin: 4px 0 0; color: #57606a; font-size: .9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture legacy cascade 3 cấp</h1>
+      <p class="note">Form cũ có cấp Huyện giữa Tỉnh và Xã. Mỗi cấp con chỉ có options sau khi cấp cha phát <code>change</code>; không có submit tự động.</p>
+
+      <form id="legacy-address-form" novalidate>
+        <label for="province">Tỉnh
+          <select id="province" name="province">
+            <option value="">-- Chọn tỉnh --</option>
+            <option value="79">Hồ Chí Minh</option>
+            <option value="01">Hà Nội</option>
+          </select>
+        </label>
+
+        <label for="district">Huyện
+          <select id="district" name="district" disabled>
+            <option value="">-- Chọn huyện --</option>
+          </select>
+        </label>
+
+        <label for="ward">Xã
+          <select id="ward" name="ward" disabled>
+            <option value="">-- Chọn xã --</option>
+          </select>
+        </label>
+
+        <output id="cascade-status" aria-live="polite">Chưa chọn Tỉnh.</output>
+        <ol id="event-log" aria-label="Thứ tự change event"></ol>
+      </form>
+    </main>
+
+    <script>
+      const province = document.querySelector("#province");
+      const district = document.querySelector("#district");
+      const ward = document.querySelector("#ward");
+      const status = document.querySelector("#cascade-status");
+      const eventLog = document.querySelector("#event-log");
+      const districtsByProvince = {
+        "79": [["760", "Quận 1"], ["769", "Quận Bình Thạnh"]],
+        "01": [["001", "Huyện Ba Đình"], ["006", "Huyện Hoàn Kiếm"]],
+      };
+      const wardsByDistrict = {
+        "760": [["26734", "Phường Bến Nghé"], ["26740", "Phường Bến Thành"]],
+        "769": [["26953", "Phường 25"], ["26956", "Phường 26"]],
+        "001": [["00001", "Phường Phúc Xá"], ["00004", "Phường Trúc Bạch"]],
+        "006": [["00007", "Phường Chương Dương"], ["00010", "Phường Cửa Đông"]],
+      };
+
+      function replaceOptions(select, placeholder, entries) {
+        select.replaceChildren(new Option(placeholder, ""));
+        entries.forEach(([value, text]) => select.add(new Option(text, value)));
+      }
+
+      function logChange(level) {
+        const item = document.createElement("li");
+        item.textContent = level;
+        eventLog.append(item);
+      }
+
+      province.addEventListener("change", () => {
+        logChange("Tỉnh");
+        const districts = districtsByProvince[province.value] || [];
+        replaceOptions(district, "-- Chọn huyện --", districts);
+        district.disabled = districts.length === 0;
+        replaceOptions(ward, "-- Chọn xã --", []);
+        ward.disabled = true;
+        status.textContent = districts.length ? "Đã nạp Huyện; chờ chọn Huyện." : "Chưa chọn Tỉnh.";
+      });
+
+      district.addEventListener("change", () => {
+        logChange("Huyện");
+        const wards = wardsByDistrict[district.value] || [];
+        replaceOptions(ward, "-- Chọn xã --", wards);
+        ward.disabled = wards.length === 0;
+        status.textContent = wards.length ? "Đã nạp Xã; chờ chọn Xã." : "Chưa chọn Huyện.";
+      });
+
+      ward.addEventListener("change", () => {
+        logChange("Xã");
+        status.textContent = ward.value ? "Hoàn tất cascade Tỉnh → Huyện → Xã." : "Chưa chọn Xã.";
+      });
+    </script>
+  </body>
+</html>
