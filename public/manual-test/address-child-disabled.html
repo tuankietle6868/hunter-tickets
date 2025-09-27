@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Disabled child dependency</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #1a7f37; font-weight: 600; }
+      #event-log { margin: 4px 0 0; color: #57606a; font-size: .9rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture dependency qua <code>disabled</code></h1>
+      <p class="note">Xã được đặt <strong>trước</strong> Tỉnh trong DOM. Nó chỉ được mở sau event <code>change</code> của Tỉnh, nên dependency phải được suy ra từ thuộc tính <code>disabled</code>, không phải thứ tự field.</p>
+
+      <form id="disabled-child-address-form" novalidate>
+        <label for="ward">Xã (select con, xuất hiện trước trong DOM)
+          <select id="ward" name="ward" disabled>
+            <option value="">-- Chọn xã --</option>
+          </select>
+        </label>
+
+        <label for="province">Tỉnh (select cha)
+          <select id="province" name="province">
+            <option value="">-- Chọn tỉnh --</option>
+            <option value="79">Hồ Chí Minh</option>
+            <option value="01">Hà Nội</option>
+          </select>
+        </label>
+
+        <output id="dependency-status" aria-live="polite">Xã đang bị khoá, chờ chọn Tỉnh.</output>
+        <ol id="event-log" aria-label="Thứ tự change event"></ol>
+      </form>
+    </main>
+
+    <script>
+      const province = document.querySelector("#province");
+      const ward = document.querySelector("#ward");
+      const status = document.querySelector("#dependency-status");
+      const eventLog = document.querySelector("#event-log");
+      const wardsByProvince = {
+        "79": [["26734", "Phường Bến Nghé"], ["26740", "Phường Bến Thành"]],
+        "01": [["00004", "Phường Hoàn Kiếm"], ["00007", "Phường Cửa Nam"]],
+      };
+
+      function logChange(level) {
+        const item = document.createElement("li");
+        item.textContent = level;
+        eventLog.append(item);
+      }
+
+      province.addEventListener("change", () => {
+        logChange("Tỉnh");
+        const wards = wardsByProvince[province.value] || [];
+        ward.replaceChildren(new Option("-- Chọn xã --", ""));
+        wards.forEach(([value, text]) => ward.add(new Option(text, value)));
+        ward.disabled = wards.length === 0;
+        status.textContent = wards.length ? "Xã đã được mở sau khi chọn Tỉnh." : "Xã đang bị khoá, chờ chọn Tỉnh.";
+      });
+
+      ward.addEventListener("change", () => {
+        logChange("Xã");
+        status.textContent = ward.value ? "Đã chọn Xã sau dependency." : "Chưa chọn Xã.";
+      });
+    </script>
+  </body>
+</html>
