@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Province name variants</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 960px; margin: 40px auto; padding: 0 20px 48px; }
+      .variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
+      form { display: grid; gap: 12px; padding: 18px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      h2 { margin: 0; font-size: 1.15rem; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #1a7f37; font-size: .9rem; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Biến thể tên Tỉnh</h1>
+      <p class="note">Profile mẫu: <strong>Hồ Chí Minh</strong>. Ba form tách biệt để mỗi select được kiểm tra độc lập.</p>
+
+      <section class="variants" aria-label="Ba biến thể option Tỉnh">
+        <form id="province-short-form" novalidate>
+          <h2>Biến thể viết tắt</h2>
+          <label for="province-short">Tỉnh
+            <select id="province-short" name="province">
+              <option value="">-- Chọn tỉnh --</option>
+              <option value="hcm-short">TP.HCM</option>
+              <option value="ha-noi">Hà Nội</option>
+            </select>
+          </label>
+          <output aria-live="polite"></output>
+        </form>
+
+        <form id="province-full-form" novalidate>
+          <h2>Biến thể đầy đủ</h2>
+          <label for="province-full">Tỉnh
+            <select id="province-full" name="province">
+              <option value="">-- Chọn tỉnh --</option>
+              <option value="hcm-full">Thành phố Hồ Chí Minh</option>
+              <option value="ha-noi">Thành phố Hà Nội</option>
+            </select>
+          </label>
+          <output aria-live="polite"></output>
+        </form>
+
+        <form id="province-standard-form" novalidate>
+          <h2>Biến thể thông dụng</h2>
+          <label for="province-standard">Tỉnh
+            <select id="province-standard" name="province">
+              <option value="">-- Chọn tỉnh --</option>
+              <option value="hcm-standard">Hồ Chí Minh</option>
+              <option value="ha-noi">Hà Nội</option>
+            </select>
+          </label>
+          <output aria-live="polite"></output>
+        </form>
+      </section>
+
+      <p class="note">Kỳ vọng: cả <code>TP.HCM</code>, <code>Thành phố Hồ Chí Minh</code> và <code>Hồ Chí Minh</code> đều chọn được từ cùng giá trị profile.</p>
+    </main>
+
+    <script>
+      document.querySelectorAll("select[name='province']").forEach((select) => {
+        const output = select.form.querySelector("output");
+        select.addEventListener("change", () => {
+          output.textContent = select.value
+            ? `Đã chọn: ${select.options[select.selectedIndex].text}`
+            : "Chưa chọn Tỉnh.";
+        });
+      });
+    </script>
+  </body>
+</html>
