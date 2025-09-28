@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — DOB year only</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 560px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #1a7f37; font-weight: 600; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture DOB: chỉ Năm sinh</h1>
+      <p class="note">Profile mẫu: <code>2000-05-12</code>. Fixture không có select Ngày hoặc Tháng.</p>
+
+      <form id="dob-year-only-form" novalidate>
+        <label for="birth-year">Năm sinh
+          <select id="birth-year" name="birth-year" data-expected-value="2000">
+            <option value="">-- Chọn năm sinh --</option>
+            <option value="1999">1999</option>
+            <option value="2000">2000</option>
+            <option value="2001">2001</option>
+          </select>
+        </label>
+        <output id="year-status" aria-live="polite">Chưa chọn năm sinh.</output>
+      </form>
+    </main>
+
+    <script>
+      const birthYear = document.querySelector("#birth-year");
+      const status = document.querySelector("#year-status");
+      birthYear.addEventListener("change", () => {
+        status.textContent = birthYear.value
+          ? `Đã chọn năm sinh: ${birthYear.value}`
+          : "Chưa chọn năm sinh.";
+      });
+    </script>
+  </body>
+</html>
