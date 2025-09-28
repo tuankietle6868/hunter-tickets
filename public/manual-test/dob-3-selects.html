@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — DOB three selects</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      fieldset { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      legend { padding: 0 6px; font-weight: 700; }
+      .date-parts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { display: block; min-height: 1.5em; margin-top: 16px; color: #1a7f37; font-weight: 600; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture DOB: ba select riêng</h1>
+      <p class="note">Profile mẫu: <code>2000-05-12</code>. Đây là ba phần DOB độc lập, không phải cascade.</p>
+
+      <form id="dob-three-selects-form" novalidate>
+        <fieldset>
+          <legend>Ngày tháng năm sinh</legend>
+          <div class="date-parts">
+            <label for="birth-day">Ngày
+              <select id="birth-day" name="birth-day" data-expected-value="12">
+                <option value="">Ngày</option>
+                <option value="12">12</option>
+              </select>
+            </label>
+            <label for="birth-month">Tháng
+              <select id="birth-month" name="birth-month" data-expected-value="05">
+                <option value="">Tháng</option>
+                <option value="05">05</option>
+              </select>
+            </label>
+            <label for="birth-year">Năm
+              <select id="birth-year" name="birth-year" data-expected-value="2000">
+                <option value="">Năm</option>
+                <option value="2000">2000</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <output id="date-status" aria-live="polite">Chưa chọn đủ Ngày / Tháng / Năm.</output>
+      </form>
+    </main>
+
+    <script>
+      const dateParts = [...document.querySelectorAll("#dob-three-selects-form select")];
+      const status = document.querySelector("#date-status");
+
+      dateParts.forEach((select) => select.addEventListener("change", () => {
+        const [day, month, year] = dateParts.map((part) => part.value);
+        status.textContent = day && month && year
+          ? `Đã chọn: ${year}-${month}-${day}`
+          : "Chưa chọn đủ Ngày / Tháng / Năm.";
+      }));
+    </script>
+  </body>
+</html>
