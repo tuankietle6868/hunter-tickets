@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — DOB text formats</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      input { box-sizing: border-box; width: 100%; min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #1a7f37; font-weight: 600; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture DOB: các định dạng text</h1>
+      <p class="note">Profile mẫu: <code>2000-05-12</code>. Placeholder của từng ô là gợi ý bắt buộc cho format đầu ra.</p>
+
+      <form id="dob-text-formats-form" novalidate>
+        <label for="birth-date-slash">Ngày sinh — DD/MM/YYYY
+          <input id="birth-date-slash" name="birthDateSlash" type="text" placeholder="dd/mm/yyyy" data-expected-value="12/05/2000" />
+        </label>
+
+        <label for="birth-date-iso">Ngày sinh — YYYY-MM-DD
+          <input id="birth-date-iso" name="birthDateIso" type="text" placeholder="yyyy-mm-dd" data-expected-value="2000-05-12" />
+        </label>
+
+        <label for="birth-date-dash">Ngày sinh — DD-MM-YYYY
+          <input id="birth-date-dash" name="birthDateDash" type="text" placeholder="dd-mm-yyyy" data-expected-value="12-05-2000" />
+        </label>
+
+        <output id="format-status" aria-live="polite">Chưa có giá trị DOB.</output>
+      </form>
+    </main>
+
+    <script>
+      const fields = [...document.querySelectorAll("#dob-text-formats-form input")];
+      const status = document.querySelector("#format-status");
+      fields.forEach((field) => field.addEventListener("input", () => {
+        const values = fields.map((input) => input.value).filter(Boolean);
+        status.textContent = values.length
+          ? `Đã nhập ${values.length}/3 format DOB.`
+          : "Chưa có giá trị DOB.";
+      }));
+    </script>
+  </body>
+</html>
