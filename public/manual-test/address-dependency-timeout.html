@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Dependency timeout</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      select { min-height: 38px; padding: 7px 9px; font: inherit; border: 1px solid #8c959f; border-radius: 6px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #cf222e; font-weight: 600; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture timeout dependency: Tỉnh → Xã</h1>
+      <p class="note">Giả lập JavaScript/API bị lỗi: sau khi chọn Tỉnh, Xã cố tình vẫn <code>disabled</code> và không có option hợp lệ nào. Không có submit tự động.</p>
+
+      <form id="timeout-address-form" novalidate>
+        <label for="province">Tỉnh
+          <select id="province" name="province">
+            <option value="">-- Chọn tỉnh --</option>
+            <option value="79">Hồ Chí Minh</option>
+            <option value="01">Hà Nội</option>
+          </select>
+        </label>
+
+        <label for="ward">Xã
+          <select id="ward" name="ward" disabled data-expected-status="cascade_timeout">
+            <option value="">-- Không thể tải xã --</option>
+          </select>
+        </label>
+
+        <output id="dependency-status" aria-live="polite">Xã đang bị khoá, chờ chọn Tỉnh.</output>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng overlay:</strong> “không tự chọn được — vui lòng chọn tay”. Cascade phải dừng sau timeout cấu hình, không treo vô hạn.</p>
+    </main>
+
+    <script>
+      const province = document.querySelector("#province");
+      const ward = document.querySelector("#ward");
+      const status = document.querySelector("#dependency-status");
+
+      province.addEventListener("change", () => {
+        // Intentionally broken dependency: do not enable or populate ward.
+        ward.disabled = true;
+        status.textContent = province.value
+          ? "Giả lập lỗi: không thể tải Xã; select vẫn bị khoá."
+          : "Xã đang bị khoá, chờ chọn Tỉnh.";
+      });
+    </script>
+  </body>
+</html>
