@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Email confirmation</title>
+    <style>
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; }
+      form { display: grid; gap: 16px; padding: 20px; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; }
+      input { min-height: 36px; padding: 4px 8px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture F1 — Email và Xác nhận Email</h1>
+      <p>Cả hai ô phải được autofill bằng cùng một địa chỉ email.</p>
+
+      <form id="duplicate-email-confirm-form">
+        <label for="email">
+          Email
+          <input id="email" name="email" type="email" autocomplete="email" />
+        </label>
+
+        <label for="email-confirm">
+          Xác nhận Email
+          <input id="email-confirm" name="emailConfirm" type="email" />
+        </label>
+      </form>
+    </main>
+  </body>
+</html>
