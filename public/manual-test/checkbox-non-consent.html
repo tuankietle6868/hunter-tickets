@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Non-consent checkbox</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 680px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: flex; align-items: flex-start; gap: 9px; font-weight: 600; }
+      input { width: 18px; height: 18px; margin-top: 2px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #9a6700; font-weight: 600; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture checkbox không phải consent</h1>
+      <p class="note">Checkbox này không chứa tín hiệu “đồng ý”, “điều khoản”, “xác nhận”, hoặc “cam kết”. Nó không được tự tick, nhưng cũng không được báo nhầm là checkbox consent.</p>
+
+      <form id="non-consent-checkbox-form" novalidate>
+        <label for="marketing-email">
+          <input id="marketing-email" type="checkbox" name="marketingEmail" data-expected-not-policy-blocked="true" />
+          Đăng ký nhận email khuyến mãi
+        </label>
+        <output id="marketing-status" aria-live="polite">Checkbox chưa được chọn.</output>
+      </form>
+
+      <p class="note">Kỳ vọng: checkbox vẫn chưa tick; overlay không hiển thị lý do <code>Skipped: policy</code> dành cho consent.</p>
+    </main>
+
+    <script>
+      const checkbox = document.querySelector("#marketing-email");
+      const status = document.querySelector("#marketing-status");
+      checkbox.addEventListener("change", () => {
+        status.textContent = checkbox.checked
+          ? "Checkbox được người dùng chọn thủ công."
+          : "Checkbox chưa được chọn.";
+      });
+    </script>
+  </body>
+</html>
