@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Consent checkbox policy</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 680px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 22px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: flex; align-items: flex-start; gap: 9px; font-weight: 600; }
+      input { width: 18px; height: 18px; margin-top: 2px; }
+      .note { color: #57606a; }
+      output { min-height: 1.5em; color: #9a6700; font-weight: 600; }
+      code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture Policy Gate: checkbox consent</h1>
+      <p class="note">Hai checkbox này luôn thuộc quyền quyết định của người dùng. Autofill không được tick chúng, kể cả khi chạy lại nhiều lần.</p>
+
+      <form id="consent-checkbox-form" novalidate>
+        <label for="agree-terms">
+          <input id="agree-terms" type="checkbox" name="agreeTerms" data-expected-status="policy_blocked" />
+          Tôi đồng ý điều khoản sử dụng
+        </label>
+
+        <label for="confirm-accuracy">
+          <input id="confirm-accuracy" type="checkbox" name="confirmAccuracy" data-expected-status="policy_blocked" />
+          Tôi xác nhận thông tin trên là chính xác
+        </label>
+
+        <output id="consent-status" aria-live="polite">Kỳ vọng: cả hai checkbox vẫn chưa tick.</output>
+      </form>
+
+      <p class="note">Kỳ vọng overlay: <code>Skipped: policy</code>. Người dùng tự quyết định tick hay không trước khi gửi form.</p>
+    </main>
+
+    <script>
+      const checkboxes = [...document.querySelectorAll("#consent-checkbox-form input[type='checkbox']")];
+      const status = document.querySelector("#consent-status");
+      checkboxes.forEach((checkbox) => checkbox.addEventListener("change", () => {
+        const selected = checkboxes.filter((input) => input.checked).length;
+        status.textContent = selected
+          ? `${selected} checkbox đã được người dùng chọn thủ công.`
+          : "Kỳ vọng: cả hai checkbox vẫn chưa tick.";
+      }));
+    </script>
+  </body>
+</html>
