@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Phone confirmation</title>
+    <style>
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; }
+      form { display: grid; gap: 16px; padding: 20px; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; }
+      input { min-height: 36px; padding: 4px 8px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture F2 — SĐT và Nhập lại SĐT</h1>
+      <p>Cả hai ô phải được autofill bằng cùng một số điện thoại.</p>
+
+      <form id="duplicate-phone-confirm-form">
+        <label for="phone">
+          SĐT
+          <input id="phone" name="phone" type="tel" autocomplete="tel" />
+        </label>
+
+        <label for="phone-confirm">
+          Nhập lại SĐT
+          <input id="phone-confirm" name="phoneConfirm" type="tel" />
+        </label>
+      </form>
+    </main>
+  </body>
+</html>
