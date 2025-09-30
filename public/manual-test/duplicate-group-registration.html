@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Group registration duplicates</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; font-weight: 600; }
+      input { box-sizing: border-box; min-height: 36px; padding: 4px 8px; font: inherit; }
+      .expected-fill { color: #1a7f37; }
+      .expected-manual { color: #9a6700; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture F3 — Đăng ký nhóm</h1>
+      <p class="note">Đây là ba thành viên khác nhau, không phải cặp trường xác nhận.</p>
+
+      <form id="duplicate-group-registration-form">
+        <label class="expected-fill" for="member-1-full-name">
+          Họ tên người 1
+          <input id="member-1-full-name" name="member1FullName" type="text" autocomplete="name" data-expected-status="filled" />
+        </label>
+
+        <label class="expected-manual" for="member-2-full-name">
+          Họ tên người 2
+          <input id="member-2-full-name" name="member2FullName" type="text" data-expected-status="duplicate_manual" />
+        </label>
+
+        <label class="expected-manual" for="member-3-full-name">
+          Họ tên người 3
+          <input id="member-3-full-name" name="member3FullName" type="text" data-expected-status="duplicate_manual" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> chỉ “Họ tên người 1” được điền. Hai trường còn lại hiển thị <code>trùng loại — tự nhập</code>.</p>
+    </main>
+  </body>
+</html>
