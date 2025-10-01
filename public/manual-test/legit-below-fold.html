@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Legitimate field below fold</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 0 auto; padding: 0 20px 48px; }
+      .intro { min-height: 125vh; display: grid; align-content: center; }
+      form { display: grid; gap: 16px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; font-weight: 600; }
+      input { box-sizing: border-box; min-height: 36px; padding: 4px 8px; font: inherit; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="intro">
+        <div>
+          <h1>Fixture G5 — Trường hợp lệ dưới fold</h1>
+          <p class="note">Cuộn xuống để thấy form. Khoảng trống này chỉ tạo chiều cao trang; không có CSS ẩn, <code>opacity</code>, hay định vị offscreen cho field.</p>
+        </div>
+      </section>
+
+      <form id="legit-below-fold-form">
+        <label for="phone">
+          Số điện thoại
+          <input id="phone" name="phone" type="tel" autocomplete="tel" data-expected-status="filled" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> trường vẫn được fill và verify bình thường, dù ban đầu nằm dưới fold.</p>
+    </main>
+  </body>
+</html>
