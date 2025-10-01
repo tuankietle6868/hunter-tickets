@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Zero-size honeypot</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; font-weight: 600; }
+      input { box-sizing: border-box; min-height: 36px; padding: 4px 8px; font: inherit; }
+      .honeypot { width: 0; height: 0; min-height: 0; padding: 0; border: 0; opacity: 0; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture G3 — Honeypot không kích thước</h1>
+      <p class="note">Hai input cùng tên <code>phone</code>; input đầu có <code>width:0; height:0; opacity:0</code>.</p>
+
+      <form id="hidden-zero-size-form">
+        <label for="hidden-phone">
+          Số điện thoại
+          <input id="hidden-phone" class="honeypot" name="phone" type="tel" data-expected-status="skipped" />
+        </label>
+
+        <label for="visible-phone">
+          Số điện thoại
+          <input id="visible-phone" name="phone" type="tel" autocomplete="tel" data-expected-status="filled" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> honeypot không kích thước và trong suốt bị skip; chỉ input hiển thị được fill.</p>
+    </main>
+  </body>
+</html>
