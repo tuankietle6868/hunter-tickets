@@ -40,3 +40,16 @@ export function isOffscreen(element: HTMLElement): boolean {
     rect.left > view.innerWidth
   );
 }
+
+/**
+ * Detects the common honeypot pattern of absolutely positioning a control far
+ * to the left. This is intentionally narrower than `isOffscreen`: ordinary
+ * fields may be offscreen simply because the user has not scrolled to them.
+ */
+export function isOffscreenHoneypot(element: HTMLElement): boolean {
+  const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+  if (!style || !["absolute", "fixed"].includes(style.position)) return false;
+
+  const left = Number.parseFloat(style.left);
+  return Number.isFinite(left) && left <= -1000;
+}

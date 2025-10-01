@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { isCssHidden, isOffscreen } from "../src/content/visibility";
+import { isCssHidden, isOffscreen, isOffscreenHoneypot } from "../src/content/visibility";
 
 function setRect(element: HTMLElement, rect: Partial<DOMRect>): void {
   Object.defineProperty(element, "getBoundingClientRect", {
@@ -49,5 +49,22 @@ describe("field visibility", () => {
 
     expect(isCssHidden(input)).toBe(false);
     expect(isOffscreen(input)).toBe(true);
+  });
+
+  it("treats an absolutely positioned far-left control as an offscreen honeypot", () => {
+    const input = document.createElement("input");
+    input.style.position = "absolute";
+    input.style.left = "-9999px";
+    document.body.append(input);
+
+    expect(isOffscreenHoneypot(input)).toBe(true);
+  });
+
+  it("does not treat an ordinary offscreen field as a honeypot", () => {
+    const input = document.createElement("input");
+    setRect(input, { top: window.innerHeight + 200, bottom: window.innerHeight + 224 });
+    document.body.append(input);
+
+    expect(isOffscreenHoneypot(input)).toBe(false);
   });
 });

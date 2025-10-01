@@ -12,7 +12,7 @@ import {
   isHardPolicyBlocked,
   isProfileConfirmationField,
 } from "./policy";
-import { isCssHidden } from "./visibility";
+import { isCssHidden, isOffscreenHoneypot } from "./visibility";
 import { acceptsFormattedValue } from "./inputConstraints";
 import {
   fillCustomSelectByText,
@@ -217,7 +217,7 @@ export async function runGenericAutofill(
         detectedField.status = "pending";
         const value = getProfileValue(profile, match.type);
 
-        if (isCssHidden(input ?? question)) {
+        if (isCssHidden(input ?? question) || isOffscreenHoneypot(input ?? question)) {
           detectedField.status = "skipped";
           return detectedField;
         }
