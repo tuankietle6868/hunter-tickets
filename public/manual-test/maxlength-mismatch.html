@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Maxlength mismatch</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; font-weight: 600; }
+      input { box-sizing: border-box; min-height: 36px; padding: 4px 8px; font: inherit; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture H3 — CCCD vượt giới hạn độ dài</h1>
+      <p class="note">Dùng profile có CCCD 12 số, ví dụ <strong>012345678901</strong>.</p>
+
+      <form id="maxlength-mismatch-form">
+        <label for="id-number">
+          Số CCCD
+          <input id="id-number" name="cccd" type="text" inputmode="numeric" maxlength="9" data-expected-status="format_mismatch" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> field để trống, không tự cắt CCCD; overlay hiển thị “định dạng không khớp”.</p>
+    </main>
+  </body>
+</html>
