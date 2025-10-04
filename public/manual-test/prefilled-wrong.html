@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Pre-filled mismatched value</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; font-weight: 600; }
+      input { box-sizing: border-box; min-height: 36px; padding: 4px 8px; font: inherit; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture H2 — Giá trị có sẵn khác profile</h1>
+      <p class="note">Dùng profile có họ tên <strong>Nguyễn Văn An</strong> để kiểm thử giá trị khác profile.</p>
+
+      <form id="prefilled-wrong-form">
+        <label for="full-name">
+          Họ và tên
+          <input id="full-name" name="fullName" type="text" autocomplete="name" value="Trần Thị Bình" data-expected-status="prepopulated_mismatch" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> giữ nguyên “Trần Thị Bình”, không tự sửa; overlay hiển thị “đã điền nhưng khác profile — kiểm tra lại”.</p>
+    </main>
+  </body>
+</html>
