@@ -148,6 +148,21 @@ describe("Autofill overlay", () => {
     expect(text).toContain("đã điền nhưng khác profile — kiểm tra lại");
   });
 
+  it("marks a pre-populated value that matches the profile as already available", () => {
+    showAutofillOverlay([
+      {
+        candidateType: "FULL_NAME",
+        confidence: 100,
+        signals: { labelText: "Họ và tên" },
+        status: "prepopulated",
+      } as DetectedField,
+    ]);
+
+    const text = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot?.textContent;
+    expect(text).toContain("đã có sẵn");
+    expect(text).toContain("giá trị đúng profile");
+  });
+
   it("explains when a field's maxlength or pattern rejects the profile format", () => {
     showAutofillOverlay([
       {

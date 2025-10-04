@@ -287,7 +287,7 @@ export async function runGenericAutofill(
         if (hasExistingValue(input)) {
           if (!permitsSameValue) autoFilledFieldTypes.add(match.type);
           detectedField.status = (await adapter.verifyValue(input, formattedValue))
-            ? "filled"
+            ? "prepopulated"
             : "prepopulated_mismatch";
           return detectedField;
         }

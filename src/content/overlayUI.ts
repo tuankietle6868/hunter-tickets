@@ -69,10 +69,11 @@ function renderFieldRow(
   correctable: boolean,
 ): string {
   const confidence = Math.max(0, Math.min(100, Math.round(field.confidence)));
-  const matched = field.status === "filled";
   const fieldName = escapeHtml(getFieldName(field));
-  const status = matched
+  const status = field.status === "filled"
     ? `<span class="field-status is-matched">✓ Matched ${confidence}%</span>`
+    : field.status === "prepopulated"
+      ? `<span class="field-status is-matched">đã có sẵn</span>`
     : field.status === "verify_failed"
       ? `<span class="field-status is-review">! Check ${confidence}%</span>`
       : field.status === "policy_blocked"
@@ -269,6 +270,7 @@ export function showAutofillOverlay(
   const ambiguous = results.filter(({ status }) => status === "ambiguous").length;
   const lowConfidence = results.filter(({ status }) => status === "low_confidence").length;
   const duplicates = results.filter(({ status }) => status === "duplicate_manual").length;
+  const prepopulated = results.filter(({ status }) => status === "prepopulated").length;
   const prepopulatedMismatch = results.filter(
     ({ status }) => status === "prepopulated_mismatch",
   ).length;
@@ -281,6 +283,8 @@ export function showAutofillOverlay(
         ? `Đã điền ${filled} trường. Có ${lowConfidence} trường có confidence thấp.`
         : duplicates
           ? `Đã điền ${filled} trường. Có ${duplicates} trường trùng loại cần tự nhập.`
+          : prepopulated
+            ? `Đã điền ${filled} trường. Có ${prepopulated} trường đã có sẵn giá trị đúng profile.`
           : prepopulatedMismatch
             ? `Đã điền ${filled} trường. Có ${prepopulatedMismatch} trường đã có giá trị khác profile.`
             : formatMismatch

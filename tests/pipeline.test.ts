@@ -82,7 +82,7 @@ describe("generic autofill pipeline", () => {
     const results = await runGenericAutofill({ fullName: "Nguyễn Văn An" });
 
     expect((document.querySelector("#full-name") as HTMLInputElement).value).toBe("Nguyễn Văn An");
-    expect(results[0].status).toBe("filled");
+    expect(results[0].status).toBe("prepopulated");
   });
 
   it("does not overwrite an existing value that differs from the profile", async () => {
