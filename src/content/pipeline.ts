@@ -70,6 +70,24 @@ function hasExistingValue(input: HTMLElement): boolean {
   return input.isContentEditable && (input.textContent?.trim().length ?? 0) > 0;
 }
 
+/** Phone masks may add punctuation while preserving the underlying number. */
+function isMatchingMaskedPhone(input: HTMLElement, expected: string, fieldType: FieldType): boolean {
+  if (fieldType !== "PHONE" || !(input instanceof HTMLInputElement)) return false;
+
+  const actualDigits = input.value.replace(/\D/g, "");
+  const expectedDigits = expected.replace(/\D/g, "");
+  return actualDigits.length > 0 && actualDigits === expectedDigits;
+}
+
+async function verifyFilledValue(
+  adapter: GenericHtmlAdapter,
+  input: HTMLElement,
+  expected: string,
+  fieldType: FieldType,
+): Promise<boolean> {
+  return isMatchingMaskedPhone(input, expected, fieldType) || (await adapter.verifyValue(input, expected));
+}
+
 type DateSelectPart = "day" | "month" | "year";
 
 function dateSelectPart(select: HTMLSelectElement): DateSelectPart | undefined {
@@ -286,7 +304,7 @@ export async function runGenericAutofill(
         }
         if (hasExistingValue(input)) {
           if (!permitsSameValue) autoFilledFieldTypes.add(match.type);
-          detectedField.status = (await adapter.verifyValue(input, formattedValue))
+          detectedField.status = (await verifyFilledValue(adapter, input, formattedValue, match.type))
             ? "prepopulated"
             : "prepopulated_mismatch";
           return detectedField;
@@ -303,7 +321,7 @@ export async function runGenericAutofill(
         adapter.setValue(input, formattedValue);
         const liveInput = resolveLiveElement(stableLocator, input.ownerDocument) ?? input;
         detectedField.elementRef = new WeakRef(liveInput);
-        detectedField.status = (await adapter.verifyValue(liveInput, formattedValue))
+        detectedField.status = (await verifyFilledValue(adapter, liveInput, formattedValue, match.type))
           ? "filled"
           : "verify_failed";
         return detectedField;

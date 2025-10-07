@@ -74,6 +74,24 @@ describe("generic autofill pipeline", () => {
     expect(results.map(({ status }) => status)).toEqual(["filled", "duplicate_manual"]);
   });
 
+  it("verifies a phone value after an input mask adds separators", async () => {
+    document.body.innerHTML = `
+      <form><label>SĐT <input id="phone" type="tel" /></label></form>
+    `;
+    const input = document.querySelector<HTMLInputElement>("#phone")!;
+    input.addEventListener("input", () => {
+      const digits = input.value.replace(/\D/g, "").slice(0, 10);
+      input.value = digits.replace(/(\d{3})(\d{3})(\d{0,4})/, (_match, first, second, third) =>
+        third ? `${first}-${second}-${third}` : `${first}-${second}`,
+      );
+    });
+
+    const results = await runGenericAutofill({ phone: "0901234567" });
+
+    expect(input.value).toBe("090-123-4567");
+    expect(results[0].status).toBe("filled");
+  });
+
   it("keeps an existing value that already matches the profile", async () => {
     document.body.innerHTML = `
       <form><label>Họ và tên <input id="full-name" value="Nguyễn Văn An" /></label></form>

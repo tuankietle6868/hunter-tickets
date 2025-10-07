@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Phone input mask</title>
+    <style>
+      :root { color: #1f2328; background: #f6f8fa; font: 16px/1.5 system-ui, sans-serif; }
+      body { max-width: 640px; margin: 40px auto; padding: 0 20px 48px; }
+      form { display: grid; gap: 16px; padding: 20px; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; }
+      label { display: grid; gap: 6px; font-weight: 600; }
+      input { box-sizing: border-box; min-height: 36px; padding: 4px 8px; font: inherit; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture H4 — SĐT có input mask</h1>
+      <p class="note">Mask đơn giản chèn dấu gạch theo dạng <code>090-123-4567</code> mỗi khi input thay đổi.</p>
+
+      <form id="input-mask-phone-form">
+        <label for="phone">
+          Số điện thoại
+          <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" data-expected-status="filled" data-expected-value="090-123-4567" />
+        </label>
+      </form>
+
+      <p class="note"><strong>Kỳ vọng:</strong> với profile <code>0901234567</code>, field nhận <code>090-123-4567</code> và verify thành công sau khi mask xử lý.</p>
+    </main>
+
+    <script>
+      const phone = document.querySelector("#phone");
+      phone.addEventListener("input", () => {
+        const digits = phone.value.replace(/\D/g, "").slice(0, 10);
+        phone.value = digits.replace(/(\d{3})(\d{3})(\d{0,4})/, (_match, first, second, third) =>
+          third ? `${first}-${second}-${third}` : `${first}-${second}`,
+        );
+      });
+    </script>
+  </body>
+</html>
