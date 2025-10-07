@@ -1,5 +1,6 @@
 import { scoreField } from "../shared/matcher";
 import type { DetectedField, FieldMatchFeedback, FieldType, Profile } from "../shared/types";
+import type { FieldSignals } from "../shared/types";
 import { GenericHtmlAdapter } from "./adapters/genericHtmlAdapter";
 import { classifyControl, getNativeCheckboxMode, getNativeSelectMode } from "./controlType";
 import {
@@ -32,6 +33,60 @@ export interface AutofillProgress {
   onIndependentFieldComplete?: (field: DetectedField) => void;
   /** User-confirmed local mappings for the active hostname. */
   learnedFeedback?: readonly FieldMatchFeedback[];
+}
+
+/**
+ * Finds equally plausible controls for one profile value. A repeated, identical
+ * label is handled by the duplicate-field safeguard; distinct labels with a
+ * small score gap require the user to choose the intended target.
+ */
+function ambiguousCandidateIndexes(
+  matches: readonly ReturnType<typeof scoreField>[],
+  signals: readonly FieldSignals[],
+): Set<number> {
+  const ambiguous = new Set<number>();
+
+  for (const [index, match] of matches.entries()) {
+    if (match.type !== "FULL_NAME" || match.ambiguous || match.confidence < AUTO_FILL_CONFIDENCE) {
+      continue;
+    }
+
+    const candidateLabel = [
+      signals[index].visibleQuestionText,
+      signals[index].labelText,
+      signals[index].ariaLabel,
+      signals[index].placeholder,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .join(" ");
+
+    for (let otherIndex = index + 1; otherIndex < matches.length; otherIndex += 1) {
+      const other = matches[otherIndex];
+      if (
+        other.type !== match.type ||
+        other.ambiguous ||
+        other.confidence < AUTO_FILL_CONFIDENCE ||
+        Math.abs(match.confidence - other.confidence) >= 15
+      ) {
+        continue;
+      }
+
+      const otherLabel = [
+        signals[otherIndex].visibleQuestionText,
+        signals[otherIndex].labelText,
+        signals[otherIndex].ariaLabel,
+        signals[otherIndex].placeholder,
+      ]
+        .filter((value): value is string => Boolean(value))
+        .join(" ");
+      if (candidateLabel !== otherLabel) {
+        ambiguous.add(index);
+        ambiguous.add(otherIndex);
+      }
+    }
+  }
+
+  return ambiguous;
 }
 
 const PROFILE_KEY_BY_FIELD_TYPE: Partial<Record<FieldType, keyof Profile>> = {
@@ -209,15 +264,21 @@ export async function runGenericAutofill(
 
   const handledBirthDateSelects = new WeakMap<HTMLSelectElement, boolean>();
   const autoFilledFieldTypes = new Set<FieldType>();
+  const questions = adapter.findQuestions();
+  const signalsByQuestion = questions.map((question) => adapter.getQuestionText(question));
+  const matches = signalsByQuestion.map((signals) =>
+    scoreField(signals, progress?.learnedFeedback),
+  );
+  const ambiguousCandidates = ambiguousCandidateIndexes(matches, signalsByQuestion);
 
   const results = await Promise.all(
-    adapter.findQuestions().map(async (question) => {
+    questions.map(async (question, index) => {
       const startedAt = performanceNow();
       let detectedField: DetectedField | undefined;
       try {
         const input = adapter.findInput(question);
-        const signals = adapter.getQuestionText(question);
-        const match = scoreField(signals, progress?.learnedFeedback);
+        const signals = signalsByQuestion[index];
+        const match = matches[index];
         const controlType = classifyControl(input ?? question);
         const stableLocator = createStableElementLocator(input ?? question);
         const element = input ?? question;
@@ -245,7 +306,7 @@ export async function runGenericAutofill(
           return detectedField;
         }
 
-        if (match.ambiguous) {
+        if (match.ambiguous || ambiguousCandidates.has(index)) {
           detectedField.status = "ambiguous";
           return detectedField;
         }

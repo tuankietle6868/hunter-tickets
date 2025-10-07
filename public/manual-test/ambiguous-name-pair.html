@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Ambiguous name pair</title>
+    <style>
+      :root {
+        color: #1f2328;
+        background: #f6f8fa;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      body {
+        max-width: 680px;
+        margin: 40px auto;
+        padding: 0 20px 48px;
+      }
+      form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        padding: 22px;
+        background: #fff;
+        border: 1px solid #d0d7de;
+        border-radius: 10px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+      }
+      input {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 38px;
+        padding: 7px 9px;
+        font: inherit;
+        border: 1px solid #8c959f;
+        border-radius: 6px;
+      }
+      .expected-review {
+        color: #9a6700;
+      }
+      .note {
+        color: #57606a;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture I1 — Cặp tên mơ hồ</h1>
+      <p class="note">
+        Hai trường nằm cạnh nhau và có tín hiệu <code>FULL_NAME</code> tương đương.
+      </p>
+
+      <form id="ambiguous-name-pair-form" novalidate>
+        <label class="expected-review" for="name">
+          Tên
+          <input
+            id="name"
+            name="name"
+            data-expected-type="FULL_NAME"
+            data-expected-status="ambiguous"
+            type="text"
+            autocomplete="name"
+          />
+        </label>
+
+        <label class="expected-review" for="contact-name">
+          Tên liên hệ
+          <input
+            id="contact-name"
+            name="contact-name"
+            data-expected-type="FULL_NAME"
+            data-expected-status="ambiguous"
+            type="text"
+            autocomplete="name"
+          />
+        </label>
+      </form>
+
+      <p class="note">
+        <strong>Kỳ vọng:</strong> cả “Tên” và “Tên liên hệ” đều là
+        <code>ambiguous — cần kiểm tra tay</code>; extension không tự chọn hoặc điền một trong hai.
+      </p>
+    </main>
+  </body>
+</html>
