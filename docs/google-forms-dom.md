@@ -8,8 +8,9 @@ The markup is intentionally structural: Google-generated class names and
 ## Captured structure
 
 `tests/fixtures/google-form-sample.html` is a sanitised, minimal DOM snapshot
-of the relevant structure. It contains a short-answer question, a paragraph
-question, and a radio question to make the supported boundary explicit.
+of the relevant structure. `tests/fixtures/google-forms-mock.html` is the
+compact T3.1-derived mock used by the adapter's jsdom unit test. Both contain
+only structural markup, never a live form URL or respondent data.
 
 ```html
 <div role="list">
@@ -28,14 +29,14 @@ not stable and are deliberately omitted from the contract.
 
 ## Selector contract for `GoogleFormsAdapter`
 
-| Purpose | Preferred selector / algorithm | Fallback | Do not rely on |
-| --- | --- | --- | --- |
-| Identify a respondent form | `location.hostname === "docs.google.com"` and pathname matching `/forms/` | presence of `div[role="list"] > div[role="listitem"]` | a `form` element or an editor-only URL |
-| Find question blocks | `div[role="list"] > div[role="listitem"]` | `div[role="listitem"]` filtered to blocks containing a supported control | generated classes / `jscontroller` |
-| Question title | first `[role="heading"]` inside the block | resolve the first supported control's `aria-labelledby` IDs, then its accessible label | fixed `id` values or heading depth |
-| Help text | resolve IDs in the control's `aria-describedby` | visible non-control text in the block, only if title is unavailable | placeholder `Your answer` |
-| Short answer | `input[type="text"], input[type="email"], input[type="tel"], input[type="number"]` | `input:not([type])` | hidden inputs |
-| Paragraph | `textarea` | none | contenteditable wrappers |
+| Purpose                    | Preferred selector / algorithm                                                     | Fallback                                                                               | Do not rely on                         |
+| -------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------- |
+| Identify a respondent form | `location.hostname === "docs.google.com"` and pathname matching `/forms/`          | presence of `div[role="list"] > div[role="listitem"]`                                  | a `form` element or an editor-only URL |
+| Find question blocks       | `div[role="list"] > div[role="listitem"]`                                          | `div[role="listitem"]` filtered to blocks containing a supported control               | generated classes / `jscontroller`     |
+| Question title             | first `[role="heading"]` inside the block                                          | resolve the first supported control's `aria-labelledby` IDs, then its accessible label | fixed `id` values or heading depth     |
+| Help text                  | resolve IDs in the control's `aria-describedby`                                    | visible non-control text in the block, only if title is unavailable                    | placeholder `Your answer`              |
+| Short answer               | `input[type="text"], input[type="email"], input[type="tel"], input[type="number"]` | `input:not([type])`                                                                    | hidden inputs                          |
+| Paragraph                  | `textarea`                                                                         | none                                                                                   | contenteditable wrappers               |
 
 Selectors are scoped to a question block before controls are searched. This
 prevents accidentally associating a question title with an input in a later

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Google Forms respondent-view mock</title>
+  </head>
+  <body>
+    <!--
+      Minimal, sanitised Google Forms respondent structure from the T3.1 DOM
+      survey. Stable ARIA roles and ID references are retained; generated
+      classes, URLs, and respondent data are intentionally absent.
+    -->
+    <main role="main">
+      <div role="list" aria-label="Câu hỏi biểu mẫu">
+        <div role="listitem" data-question-id="name">
+          <div id="mock-name-title" role="heading" aria-level="3">
+            Họ và tên <span aria-label="Bắt buộc">*</span>
+          </div>
+          <div id="mock-name-help">Dùng tên trên giấy tờ tùy thân.</div>
+          <div>
+            <input
+              id="mock-name"
+              type="text"
+              aria-labelledby="mock-name-title"
+              aria-describedby="mock-name-help"
+            />
+          </div>
+        </div>
+
+        <div role="listitem" data-question-id="email">
+          <div id="mock-email-title" role="heading" aria-level="3">Email liên hệ</div>
+          <div id="mock-email-help">Dùng để nhận vé điện tử.</div>
+          <div>
+            <input
+              id="mock-email"
+              type="email"
+              aria-labelledby="mock-email-title"
+              aria-describedby="mock-email-help"
+            />
+          </div>
+        </div>
+
+        <div role="listitem" data-question-id="note">
+          <div id="mock-note-title" role="heading" aria-level="3">Ghi chú</div>
+          <textarea id="mock-note" aria-labelledby="mock-note-title"></textarea>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
