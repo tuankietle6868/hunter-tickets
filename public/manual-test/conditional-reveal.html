@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Conditional reveal</title>
+    <style>
+      :root {
+        color: #1f2328;
+        background: #f6f8fa;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+      }
+      body {
+        max-width: 680px;
+        margin: 40px auto;
+        padding: 0 20px 48px;
+      }
+      form {
+        display: grid;
+        gap: 16px;
+        padding: 22px;
+        background: #fff;
+        border: 1px solid #d0d7de;
+        border-radius: 10px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+      }
+      input,
+      select {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 38px;
+        padding: 7px 9px;
+        font: inherit;
+        border: 1px solid #8c959f;
+        border-radius: 6px;
+      }
+      .note {
+        color: #57606a;
+      }
+      #conditional-fields {
+        display: grid;
+        gap: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Fixture J1 — Hiện trường có điều kiện</h1>
+      <p class="note">Chọn “Có người đi cùng” để JavaScript thêm một trường mới vào form.</p>
+
+      <form id="conditional-reveal-form" novalidate>
+        <label for="attendance-mode">
+          Hình thức tham dự
+          <select id="attendance-mode" name="attendance-mode">
+            <option value="">-- Chọn hình thức --</option>
+            <option value="solo">Đi một mình</option>
+            <option value="with-guest">Có người đi cùng</option>
+          </select>
+        </label>
+
+        <div id="conditional-fields" aria-live="polite"></div>
+      </form>
+
+      <p class="note">
+        <strong>Kỳ vọng:</strong> sau khi trường “Tên người đi cùng” xuất hiện, lượt scan tiếp theo
+        nhận diện nó là <code>FULL_NAME</code> và điền giá trị hồ sơ.
+      </p>
+    </main>
+
+    <script>
+      const attendanceMode = document.querySelector("#attendance-mode");
+      const conditionalFields = document.querySelector("#conditional-fields");
+
+      attendanceMode.addEventListener("change", () => {
+        conditionalFields.replaceChildren();
+        if (attendanceMode.value !== "with-guest") return;
+
+        const label = document.createElement("label");
+        label.htmlFor = "guest-name";
+        label.append("Tên người đi cùng");
+
+        const input = document.createElement("input");
+        input.id = "guest-name";
+        input.name = "guest-name";
+        input.type = "text";
+        input.autocomplete = "name";
+        input.setAttribute("data-expected-type", "FULL_NAME");
+        input.setAttribute("data-expected-status", "filled-on-rescan");
+        label.append(input);
+        conditionalFields.append(label);
+      });
+    </script>
+  </body>
+</html>
