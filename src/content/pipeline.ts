@@ -264,7 +264,10 @@ export async function runGenericAutofill(
 
   const handledBirthDateSelects = new WeakMap<HTMLSelectElement, boolean>();
   const autoFilledFieldTypes = new Set<FieldType>();
-  const questions = adapter.findQuestions();
+  const questions = adapter.findQuestions().filter((question) => {
+    const input = adapter.findInput(question);
+    return !isCssHidden(input ?? question);
+  });
   const signalsByQuestion = questions.map((question) => adapter.getQuestionText(question));
   const matches = signalsByQuestion.map((signals) =>
     scoreField(signals, progress?.learnedFeedback),

@@ -12,12 +12,28 @@ export function observeDynamicFields(
   onRescan: () => void,
   debounceMs = DYNAMIC_FIELD_RESCAN_DEBOUNCE_MS,
 ): () => void {
-  return createDebouncedObserver(root, (mutations) => {
-    if (!mutations.some((mutation) => mutation.type === "childList" && mutation.addedNodes.length > 0)) {
-      return;
-    }
-    onRescan();
-  }, { childList: true, subtree: true, debounceMs });
+  return createDebouncedObserver(
+    root,
+    (mutations) => {
+      if (
+        !mutations.some(
+          (mutation) =>
+            (mutation.type === "childList" && mutation.addedNodes.length > 0) ||
+            mutation.type === "attributes",
+        )
+      ) {
+        return;
+      }
+      onRescan();
+    },
+    {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["aria-hidden", "class", "hidden", "style"],
+      debounceMs,
+    },
+  );
 }
 
 /**
