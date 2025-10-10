@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Stress: frequent mutations</title>
+    <style>
+      body { max-width: 760px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; }
+      form { display: grid; gap: 16px; padding: 20px; border: 1px solid #d0d7de; border-radius: 10px; }
+      label { display: grid; gap: 5px; }
+      input { min-height: 36px; box-sizing: border-box; padding: 4px 8px; }
+      .note { padding: 12px; border-left: 4px solid #bf8700; background: #fff8c5; }
+      #animation-slot { min-height: 64px; padding: 10px; border: 1px dashed #8c959f; }
+      #run-state { font-variant-numeric: tabular-nums; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Stress test — mutation mỗi 100 ms</h1>
+      <p class="note">
+        Trang sẽ thêm rồi xoá một field giả mỗi 100 ms trong 2 giây (20 lần), mô phỏng animation hoặc
+        framework render lại. Extension chỉ nên re-scan <strong>một lần</strong>, khoảng 200 ms sau thay đổi cuối.
+        Theo dõi log <code>Full-form SCAN→MATCH</code>: không được có log liên tục trong lúc animation chạy.
+      </p>
+      <form id="stress-frequent-mutation-form" novalidate>
+        <label for="full-name">Họ và tên<input id="full-name" name="fullName" autocomplete="name" /></label>
+        <div id="animation-slot" aria-live="polite">
+          <span id="run-state">Đang chuẩn bị chạy mutation…</span>
+        </div>
+      </form>
+    </main>
+    <script>
+      const slot = document.querySelector("#animation-slot");
+      const state = document.querySelector("#run-state");
+      const mutationIntervalMs = 100;
+      const mutationCount = 20;
+      let tick = 0;
+
+      const timer = window.setInterval(() => {
+        tick += 1;
+        slot.replaceChildren();
+        const label = document.createElement("label");
+        label.htmlFor = `animated-field-${tick}`;
+        label.append(`Trường render tạm thời ${tick}`);
+        const input = document.createElement("input");
+        input.id = `animated-field-${tick}`;
+        input.name = `animated-field-${tick}`;
+        input.type = "text";
+        label.append(input);
+        state.textContent = `Mutation ${tick}/${mutationCount} — đang render lại…`;
+        slot.append(label, state);
+
+        if (tick === mutationCount) {
+          window.clearInterval(timer);
+          window.setTimeout(() => {
+            slot.replaceChildren();
+            state.textContent = "Đã hoàn tất 20 mutations. Chờ debounce 200 ms để extension re-scan một lần.";
+            slot.append(state);
+          }, mutationIntervalMs);
+        }
+      }, mutationIntervalMs);
+    </script>
+  </body>
+</html>

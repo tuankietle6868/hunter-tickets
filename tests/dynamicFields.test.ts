@@ -22,6 +22,25 @@ describe("dynamic form fields", () => {
     stop();
   });
 
+  it("does not repeatedly rescan while a field is replaced every 100ms for two seconds", async () => {
+    document.body.innerHTML = '<form id="ticket-form"><div id="animation-slot"></div></form>';
+    const form = document.querySelector<HTMLFormElement>("#ticket-form")!;
+    const slot = document.querySelector<HTMLElement>("#animation-slot")!;
+    const onRescan = vi.fn();
+    const stop = observeDynamicFields(form, onRescan);
+
+    for (let tick = 0; tick < 20; tick += 1) {
+      slot.replaceChildren(document.createElement("input"));
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    // Every change lands inside the 200ms debounce window, so no scan has run yet.
+    expect(onRescan).not.toHaveBeenCalled();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(onRescan).toHaveBeenCalledOnce();
+    stop();
+  }, 3_000);
+
   it("rescans after a selected option renders a new field", async () => {
     document.body.innerHTML = `
       <form id="ticket-form">
