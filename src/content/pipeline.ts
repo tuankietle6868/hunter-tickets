@@ -23,7 +23,11 @@ import {
 } from "./choiceControls";
 import { createStableElementLocator, resolveLiveElement } from "./liveElement";
 import { detectedFieldCache, type FieldGroup } from "./fieldCache";
-import { logInstantFieldDuration, performanceNow } from "./performance";
+import {
+  logFullFormScanMatchDuration,
+  logInstantFieldDuration,
+  performanceNow,
+} from "./performance";
 
 /** Minimum matching confidence required for automatic filling. */
 export const AUTO_FILL_CONFIDENCE = 80;
@@ -262,6 +266,7 @@ export async function runGenericAutofill(
     return [];
   }
 
+  const scanMatchStartedAt = performanceNow();
   const handledBirthDateSelects = new WeakMap<HTMLSelectElement, boolean>();
   const autoFilledFieldTypes = new Set<FieldType>();
   const questions = adapter.findQuestions().filter((question) => {
@@ -273,6 +278,7 @@ export async function runGenericAutofill(
     scoreField(signals, progress?.learnedFeedback),
   );
   const ambiguousCandidates = ambiguousCandidateIndexes(matches, signalsByQuestion);
+  logFullFormScanMatchDuration(questions.length, performanceNow() - scanMatchStartedAt);
 
   const results = await Promise.all(
     questions.map(async (question, index) => {

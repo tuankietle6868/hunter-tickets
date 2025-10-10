@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  FULL_FORM_SCAN_MATCH_MAX_DURATION_MS,
   INSTANT_FIELD_MAX_DURATION_MS,
   logCascadeDuration,
+  logFullFormScanMatchDuration,
   logInstantFieldDuration,
 } from "../src/content/performance";
 import type { DetectedField } from "../src/shared/types";
@@ -39,5 +41,17 @@ describe("performance telemetry", () => {
 
     expect(info).toHaveBeenCalledWith(expect.stringContaining("network-dependent"));
     expect(error).not.toHaveBeenCalled();
+  });
+
+  it("reports a full-form SCAN→MATCH failure only after its one-second target", () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    logFullFormScanMatchDuration(60, FULL_FORM_SCAN_MATCH_MAX_DURATION_MS - 1);
+    expect(info).toHaveBeenCalledWith(expect.stringContaining("Full-form SCAN→MATCH (60 fields)"));
+    expect(error).not.toHaveBeenCalled();
+
+    logFullFormScanMatchDuration(60, FULL_FORM_SCAN_MATCH_MAX_DURATION_MS + 1);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("exceeded the 1000ms"));
   });
 });

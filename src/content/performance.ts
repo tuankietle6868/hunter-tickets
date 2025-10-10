@@ -3,6 +3,9 @@ import type { DetectedField } from "../shared/types";
 /** Maximum accepted end-to-end duration for one non-cascading field. */
 export const INSTANT_FIELD_MAX_DURATION_MS = 1_000;
 
+/** Maximum accepted SCAN → MATCH duration for the 50+ field stress fixture. */
+export const FULL_FORM_SCAN_MATCH_MAX_DURATION_MS = 1_000;
+
 function formatDuration(durationMs: number): string {
   return `${durationMs.toFixed(1)}ms`;
 }
@@ -13,6 +16,18 @@ export function logInstantFieldDuration(field: DetectedField, durationMs: number
   const message = `[Smart Form Autofill] Instant field SCAN→FILL→VERIFY (${description}): ${formatDuration(durationMs)}`;
   if (durationMs > INSTANT_FIELD_MAX_DURATION_MS) {
     console.error(`${message} — exceeded the 1000ms performance target.`);
+    return;
+  }
+  console.info(message);
+}
+
+/** Logs the synchronous SCAN → MATCH phase for a complete form. */
+export function logFullFormScanMatchDuration(fieldCount: number, durationMs: number): void {
+  const message = `[Smart Form Autofill] Full-form SCAN→MATCH (${fieldCount} fields): ${formatDuration(durationMs)}`;
+  if (durationMs > FULL_FORM_SCAN_MATCH_MAX_DURATION_MS) {
+    console.error(
+      `${message} — exceeded the ${FULL_FORM_SCAN_MATCH_MAX_DURATION_MS}ms performance target.`,
+    );
     return;
   }
   console.info(message);

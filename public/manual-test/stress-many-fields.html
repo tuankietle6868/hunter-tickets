@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Stress: many fields</title>
+    <style>
+      body { max-width: 980px; margin: 40px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; }
+      form { display: grid; gap: 20px; }
+      fieldset { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; padding: 16px; }
+      legend { font-weight: 700; }
+      label { display: grid; gap: 4px; font-size: 14px; }
+      input, textarea { min-height: 36px; box-sizing: border-box; padding: 4px 8px; }
+      .note { padding: 12px; border-left: 4px solid #0969da; background: #f6f8fa; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Stress test — 60 trường</h1>
+      <p class="note">
+        Có 6 trường profile và 54 trường không liên quan. Mở DevTools rồi chạy extension:
+        console sẽ ghi <code>Full-form SCAN→MATCH (60 fields)</code>; kết quả phải không vượt quá
+        <strong>1.000 ms</strong> (mục tiêu hiệu năng GĐ5). Form không tự submit.
+      </p>
+      <form id="stress-many-fields-form" novalidate>
+        <fieldset>
+          <legend>Trường profile cần nhận diện (6)</legend>
+          <label>Họ và tên<input id="full-name" name="fullName" autocomplete="name" /></label>
+          <label>Số điện thoại liên hệ<input id="phone" name="phone" type="tel" autocomplete="tel" /></label>
+          <label>Email liên hệ<input id="email" name="email" type="email" autocomplete="email" /></label>
+          <label>CCCD<input id="id-number" name="cccd" inputmode="numeric" /></label>
+          <label>Ngày sinh<input id="birth-date" name="birthDate" type="date" autocomplete="bday" /></label>
+          <label>Địa chỉ liên hệ<textarea id="address" name="address" autocomplete="street-address"></textarea></label>
+        </fieldset>
+        <fieldset>
+          <legend>Trường vận hành không liên quan (54)</legend>
+          <label>Mã hồ sơ 01<input name="record-01" /></label><label>Mã hồ sơ 02<input name="record-02" /></label><label>Mã hồ sơ 03<input name="record-03" /></label>
+          <label>Mã hồ sơ 04<input name="record-04" /></label><label>Mã hồ sơ 05<input name="record-05" /></label><label>Mã hồ sơ 06<input name="record-06" /></label>
+          <label>Mã hồ sơ 07<input name="record-07" /></label><label>Mã hồ sơ 08<input name="record-08" /></label><label>Mã hồ sơ 09<input name="record-09" /></label>
+          <label>Mã hồ sơ 10<input name="record-10" /></label><label>Mã hồ sơ 11<input name="record-11" /></label><label>Mã hồ sơ 12<input name="record-12" /></label>
+          <label>Mã hồ sơ 13<input name="record-13" /></label><label>Mã hồ sơ 14<input name="record-14" /></label><label>Mã hồ sơ 15<input name="record-15" /></label>
+          <label>Mã hồ sơ 16<input name="record-16" /></label><label>Mã hồ sơ 17<input name="record-17" /></label><label>Mã hồ sơ 18<input name="record-18" /></label>
+          <label>Mã hồ sơ 19<input name="record-19" /></label><label>Mã hồ sơ 20<input name="record-20" /></label><label>Mã hồ sơ 21<input name="record-21" /></label>
+          <label>Mã hồ sơ 22<input name="record-22" /></label><label>Mã hồ sơ 23<input name="record-23" /></label><label>Mã hồ sơ 24<input name="record-24" /></label>
+          <label>Mã hồ sơ 25<input name="record-25" /></label><label>Mã hồ sơ 26<input name="record-26" /></label><label>Mã hồ sơ 27<input name="record-27" /></label>
+          <label>Mã hồ sơ 28<input name="record-28" /></label><label>Mã hồ sơ 29<input name="record-29" /></label><label>Mã hồ sơ 30<input name="record-30" /></label>
+          <label>Mã hồ sơ 31<input name="record-31" /></label><label>Mã hồ sơ 32<input name="record-32" /></label><label>Mã hồ sơ 33<input name="record-33" /></label>
+          <label>Mã hồ sơ 34<input name="record-34" /></label><label>Mã hồ sơ 35<input name="record-35" /></label><label>Mã hồ sơ 36<input name="record-36" /></label>
+          <label>Mã hồ sơ 37<input name="record-37" /></label><label>Mã hồ sơ 38<input name="record-38" /></label><label>Mã hồ sơ 39<input name="record-39" /></label>
+          <label>Mã hồ sơ 40<input name="record-40" /></label><label>Mã hồ sơ 41<input name="record-41" /></label><label>Mã hồ sơ 42<input name="record-42" /></label>
+          <label>Mã hồ sơ 43<input name="record-43" /></label><label>Mã hồ sơ 44<input name="record-44" /></label><label>Mã hồ sơ 45<input name="record-45" /></label>
+          <label>Mã hồ sơ 46<input name="record-46" /></label><label>Mã hồ sơ 47<input name="record-47" /></label><label>Mã hồ sơ 48<input name="record-48" /></label>
+          <label>Mã hồ sơ 49<input name="record-49" /></label><label>Mã hồ sơ 50<input name="record-50" /></label><label>Mã hồ sơ 51<input name="record-51" /></label>
+          <label>Mã hồ sơ 52<input name="record-52" /></label><label>Mã hồ sơ 53<input name="record-53" /></label><label>Mã hồ sơ 54<input name="record-54" /></label>
+        </fieldset>
+      </form>
+    </main>
+  </body>
+</html>
