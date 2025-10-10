@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Google Forms changed-DOM mock</title>
+  </head>
+  <body>
+    <!--
+      Intentional contract break: a UI change inserts a wrapper between the
+      question list and each listitem. The adapter's direct-child selector must
+      reject this shape, rather than guessing associations and filling data.
+    -->
+    <main role="main">
+      <div role="list" aria-label="Câu hỏi biểu mẫu">
+        <section data-ui-revision="changed">
+          <div role="listitem">
+            <div id="changed-name-title" role="heading" aria-level="3">Họ và tên</div>
+            <input id="changed-name" type="text" aria-labelledby="changed-name-title" />
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

@@ -9,8 +9,11 @@ The markup is intentionally structural: Google-generated class names and
 
 `tests/fixtures/google-form-sample.html` is a sanitised, minimal DOM snapshot
 of the relevant structure. `tests/fixtures/google-forms-mock.html` is the
-compact T3.1-derived mock used by the adapter's jsdom unit test. Both contain
-only structural markup, never a live form URL or respondent data.
+compact T3.1-derived mock used by the adapter's jsdom unit test.
+`tests/fixtures/google-forms-mock-changed-dom.html` deliberately breaks the
+direct-child relationship and verifies the safe unsupported-DOM fallback.
+All fixtures contain only structural markup, never a live form URL or
+respondent data.
 
 ```html
 <div role="list">
