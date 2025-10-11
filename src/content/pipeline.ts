@@ -23,6 +23,7 @@ import {
 } from "./choiceControls";
 import { createStableElementLocator, resolveLiveElement } from "./liveElement";
 import { detectedFieldCache, type FieldGroup } from "./fieldCache";
+import { fillCascadingSelectChain, type CascadingSelectStep } from "./selectOptions";
 import {
   logFullFormScanMatchDuration,
   logInstantFieldDuration,
@@ -277,6 +278,10 @@ export async function runGenericAutofill(
   const matches = signalsByQuestion.map((signals) =>
     scoreField(signals, progress?.learnedFeedback),
   );
+  const hasCascadingSelectChain =
+    matches.filter((match) =>
+      ["PROVINCE", "DISTRICT_LEGACY", "WARD"].includes(match.type),
+    ).length > 1;
   const ambiguousCandidates = ambiguousCandidateIndexes(matches, signalsByQuestion);
   logFullFormScanMatchDuration(questions.length, performanceNow() - scanMatchStartedAt);
 
@@ -317,6 +322,13 @@ export async function runGenericAutofill(
 
         if (match.ambiguous || ambiguousCandidates.has(index)) {
           detectedField.status = "ambiguous";
+          return detectedField;
+        }
+
+        // Cascade members are filled serially after every other field has
+        // been classified. A child can be rendered only after its parent
+        // dispatches `change`, so parallel generic filling is unsafe here.
+        if (hasCascadingSelectChain && isCascadeField(detectedField)) {
           return detectedField;
         }
 
@@ -403,6 +415,19 @@ export async function runGenericAutofill(
       }
     }),
   );
+
+  const cascadeSteps = (hasCascadingSelectChain ? results : []).flatMap<CascadingSelectStep>((field) => {
+    const element = field.elementRef.deref();
+    const value = getProfileValue(profile, field.candidateType);
+    return field.status === "pending" && element instanceof HTMLSelectElement && value
+      ? [{ select: element, value, detectedField: field }]
+      : [];
+  });
+  if (cascadeSteps.length > 0) {
+    for (const { step, status } of await fillCascadingSelectChain(cascadeSteps)) {
+      step.detectedField!.status = status;
+    }
+  }
   registerFieldGroups(results);
   return results;
 }

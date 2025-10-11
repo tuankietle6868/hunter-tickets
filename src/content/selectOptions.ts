@@ -49,7 +49,10 @@ export interface CascadingSelectChainResult {
 }
 
 function setNativeSelectValue(select: HTMLSelectElement, value: string): void {
-  select.value = value;
+  // Profiles retain human-readable place names while native selects frequently
+  // use administrative codes as option values. Resolve the visible option at
+  // the moment it is selected, since a parent may have just rendered a child.
+  select.value = matchProfileToOption(value, extractOptions(select))?.value ?? value;
   select.dispatchEvent(new Event("change", { bubbles: true }));
 }
 

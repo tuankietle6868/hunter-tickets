@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Form Autofill — Realistic combined ticket registration</title>
+    <style>
+      body { max-width: 760px; margin: 40px auto; padding: 0 20px 48px; font: 16px/1.5 system-ui, sans-serif; color: #1f2328; background: #f6f8fa; }
+      form { display: grid; gap: 18px; padding: 24px; background: #fff; border: 1px solid #d0d7de; border-radius: 10px; }
+      fieldset { display: grid; gap: 12px; padding: 16px; border: 1px solid #d8dee4; border-radius: 7px; }
+      label { display: grid; gap: 5px; font-weight: 600; }
+      input, select { min-height: 38px; box-sizing: border-box; padding: 6px 8px; font: inherit; }
+      .inline { display: flex; flex-wrap: wrap; gap: 16px; }
+      .inline label { display: flex; align-items: center; gap: 6px; font-weight: 400; }
+      .honeypot { display: none; }
+      output { color: #1a7f37; }
+      .note { color: #57606a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Đăng ký vé sự kiện</h1>
+      <p class="note">Fixture tổng duyệt: profile mẫu gồm Nguyễn Văn An, CCCD 079200012345, 0901234567, an@example.com, 12/05/2000, Hồ Chí Minh, Phường Bến Nghé và Nam.</p>
+      <form id="realistic-combined-form" novalidate>
+        <label for="full-name">Họ và tên<input id="full-name" name="fullName" autocomplete="name" /></label>
+        <label for="id-number">CCCD<input id="id-number" name="cccd" inputmode="numeric" /></label>
+        <label for="phone">Số điện thoại<input id="phone" name="phone" type="tel" autocomplete="tel" /></label>
+        <label for="email">Email<input id="email" name="email" type="email" autocomplete="email" /></label>
+
+        <fieldset>
+          <legend>Ngày sinh</legend>
+          <div class="inline">
+            <label>Ngày <select id="birth-day" name="birth-day"><option value="">Ngày</option><option value="12">12</option></select></label>
+            <label>Tháng <select id="birth-month" name="birth-month"><option value="">Tháng</option><option value="05">05</option></select></label>
+            <label>Năm <select id="birth-year" name="birth-year"><option value="">Năm</option><option value="2000">2000</option></select></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Địa chỉ nhận thông tin</legend>
+          <label for="province">Tỉnh/Thành phố<select id="province" name="province"><option value="">-- Chọn tỉnh --</option><option value="79">Hồ Chí Minh</option><option value="01">Hà Nội</option></select></label>
+          <label for="ward">Phường/Xã<select id="ward" name="ward" disabled><option value="">-- Chọn phường/xã --</option></select></label>
+          <output id="cascade-status" aria-live="polite">Chưa chọn tỉnh.</output>
+        </fieldset>
+
+        <fieldset>
+          <legend>Giới tính</legend>
+          <div class="inline">
+            <label><input id="gender-male" type="radio" name="gender" value="male" /> Nam</label>
+            <label><input id="gender-female" type="radio" name="gender" value="female" /> Nữ</label>
+          </div>
+        </fieldset>
+
+        <label class="inline" for="agree-terms"><input id="agree-terms" type="checkbox" name="agreeTerms" /> Tôi đồng ý điều khoản đăng ký vé</label>
+        <div class="honeypot" aria-hidden="true"><label for="contact-phone-confirm">Số điện thoại liên hệ<input id="contact-phone-confirm" name="phone" type="tel" tabindex="-1" /></label></div>
+      </form>
+    </main>
+    <script>
+      const province = document.querySelector("#province");
+      const ward = document.querySelector("#ward");
+      const status = document.querySelector("#cascade-status");
+      const wardsByProvince = {
+        "79": [["26734", "Phường Bến Nghé"], ["26740", "Phường Bến Thành"]],
+        "01": [["00004", "Phường Hoàn Kiếm"]],
+      };
+      province.addEventListener("change", () => {
+        const wards = wardsByProvince[province.value] || [];
+        ward.replaceChildren(new Option("-- Chọn phường/xã --", ""));
+        wards.forEach(([value, text]) => ward.add(new Option(text, value)));
+        ward.disabled = wards.length === 0;
+        status.textContent = wards.length ? "Đã nạp phường/xã theo tỉnh." : "Chưa chọn tỉnh.";
+      });
+    </script>
+  </body>
+</html>

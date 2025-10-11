@@ -1,0 +1,17 @@
+{
+  "fixture": "realistic-combined.html",
+  "fields": [
+    { "field": "#full-name", "expectedType": "FULL_NAME", "shouldFill": true },
+    { "field": "#id-number", "expectedType": "ID_NUMBER", "shouldFill": true },
+    { "field": "#phone", "expectedType": "PHONE", "shouldFill": true },
+    { "field": "#email", "expectedType": "EMAIL", "shouldFill": true },
+    { "field": "#birth-day", "expectedType": "DATE_OF_BIRTH", "shouldFill": true },
+    { "field": "#birth-month", "expectedType": "DATE_OF_BIRTH", "shouldFill": true },
+    { "field": "#birth-year", "expectedType": "DATE_OF_BIRTH", "shouldFill": true },
+    { "field": "#province", "expectedType": "PROVINCE", "shouldFill": true },
+    { "field": "#ward", "expectedType": "WARD", "shouldFill": true },
+    { "field": "input[name=\"gender\"]", "expectedType": "GENDER", "shouldFill": true },
+    { "field": "#agree-terms", "expectedType": "UNKNOWN", "shouldFill": false, "expectedReason": "policy_blocked" },
+    { "field": "#contact-phone-confirm", "expectedType": "PHONE", "shouldFill": false, "expectedReason": "skipped" }
+  ]
+}
