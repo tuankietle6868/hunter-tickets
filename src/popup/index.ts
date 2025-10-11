@@ -57,6 +57,18 @@ const fields: Array<{
     autocomplete: "sex",
     placeholder: "Nam, Nữ hoặc Khác",
   },
+  {
+    key: "province",
+    label: "Tỉnh/Thành phố",
+    type: "text",
+    placeholder: "Hồ Chí Minh",
+  },
+  {
+    key: "ward",
+    label: "Phường/Xã",
+    type: "text",
+    placeholder: "Phường Bến Nghé",
+  },
 ];
 
 type TabsApi = {

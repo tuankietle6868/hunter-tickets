@@ -90,6 +90,8 @@ describe("Profile popup", () => {
       email: "an@example.com",
       dateOfBirth: "1999-10-20",
       address: "Quận 1, TP. Hồ Chí Minh",
+      province: "Hồ Chí Minh",
+      ward: "Phường Bến Nghé",
     };
     for (const [name, value] of Object.entries(values)) {
       (form!.elements.namedItem(name) as HTMLInputElement).value = value;
@@ -104,6 +106,8 @@ describe("Profile popup", () => {
     await vi.waitFor(() => {
       expect((document.querySelector("#fullName") as HTMLInputElement).value).toBe(values.fullName);
       expect((document.querySelector("#address") as HTMLInputElement).value).toBe(values.address);
+      expect((document.querySelector("#province") as HTMLInputElement).value).toBe(values.province);
+      expect((document.querySelector("#ward") as HTMLInputElement).value).toBe(values.ward);
     });
   });
 

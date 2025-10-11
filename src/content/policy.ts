@@ -9,6 +9,7 @@ export const AUTO_FILL_FIELD_TYPES = [
   "PHONE",
   "EMAIL",
   "DATE_OF_BIRTH",
+  "ADDRESS",
   "PROVINCE",
   "WARD",
   "DISTRICT_LEGACY",
@@ -53,7 +54,17 @@ export function isProfileConfirmationField(signals: FieldSignals, fieldType: Fie
  * Detects consent and acknowledgement controls which must never be populated.
  * This runs before every fill and is therefore independent of confidence.
  */
-export function isHardPolicyBlocked(signals: FieldSignals, fieldType?: FieldType): boolean {
+export function isHardPolicyBlocked(
+  signals: FieldSignals,
+  fieldType?: FieldType,
+  controlType?: ControlType,
+): boolean {
+  // An acknowledgement must be an affirmative choice. A text/textarea question
+  // may legitimately mention confirmation in its instructions (for example,
+  // an address collection notice), and must not be blocked on that wording.
+  if (controlType && controlType !== "CHECKBOX" && controlType !== "RADIO") {
+    return false;
+  }
   const label = [
     signals.visibleQuestionText,
     signals.labelText,

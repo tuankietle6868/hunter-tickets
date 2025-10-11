@@ -179,6 +179,19 @@ describe("generic autofill pipeline", () => {
     expect(results).toMatchObject([{ status: "policy_blocked" }]);
   });
 
+  it("fills an address text area instead of treating it as a policy-controlled choice", async () => {
+    document.body.innerHTML = `
+      <form><label>Địa chỉ <textarea id="address" name="address"></textarea></label></form>
+    `;
+
+    const results = await runGenericAutofill({ address: "12 Nguyễn Huệ, Quận 1" });
+
+    expect((document.querySelector("#address") as HTMLTextAreaElement).value).toBe(
+      "12 Nguyễn Huệ, Quận 1",
+    );
+    expect(results).toMatchObject([{ candidateType: "ADDRESS", status: "filled" }]);
+  });
+
   it("fills and verifies a valid field below the fold without scrolling it", async () => {
     document.body.innerHTML = `
       <form><label>Họ và tên <input id="full-name" type="text" /></label></form>

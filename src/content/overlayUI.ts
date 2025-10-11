@@ -160,8 +160,8 @@ function renderOverlay(
       .correction-picker select { width: 100%; height: 29px; padding: 0 5px; border: 1px solid #b8c5d9; border-radius: 5px; color: #344158; background: #fff; font: inherit; }
       .correction-picker div { display: flex; gap: 6px; margin-top: 8px; }
       .correction-status { min-height: 14px; margin: 7px 0 0 !important; color: #168044; font-weight: 600 !important; }
-      button { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 6px; color: #667085; background: transparent; cursor: pointer; font: 20px/1 sans-serif; }
-      button:hover, button:focus-visible { color: #172033; background: #edf1f7; outline: none; }
+      .close-button { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 6px; color: #667085; background: transparent; cursor: pointer; font: 20px/1 sans-serif; }
+      .close-button:hover, .close-button:focus-visible { color: #172033; background: #edf1f7; outline: none; }
     </style>
     <section id="${OVERLAY_PANEL_ID}" class="panel" role="status" aria-live="polite">
       <p class="label">Smart Form Autofill</p>
@@ -175,7 +175,7 @@ function renderOverlay(
           ? `<div class="actions"><button class="action-button" type="button" data-overlay-action="rescan">SCAN LẠI</button><button class="action-button is-primary" type="button" data-overlay-action="refill">ĐIỀN LẠI</button></div>`
           : ""
       }
-      <button type="button" aria-label="Đóng thông báo">×</button>
+      <button class="close-button" type="button" aria-label="Đóng thông báo">×</button>
     </section>
   `;
   shadow
@@ -312,7 +312,9 @@ export function showAutofillOverlay(
 
 /** Scrolls to the scanned input and applies a short, high-priority highlight. */
 export function scrollToAndHighlightField(field: DetectedField): void {
-  const element = resolveLiveElement(field.stableLocator) ?? field.elementRef.deref();
+  const resolved = resolveLiveElement(field.stableLocator);
+  const referenced = field.elementRef.deref();
+  const element = resolved?.isConnected ? resolved : referenced?.isConnected ? referenced : undefined;
   if (!element) return;
 
   element.scrollIntoView?.({ behavior: "smooth", block: "center" });

@@ -66,8 +66,18 @@ function radioOptions(input: HTMLElement): HTMLElement[] {
 
 function afterNextAnimationFrame(ownerDocument: Document): Promise<void> {
   const view = ownerDocument.defaultView;
-  if (!view) return Promise.resolve();
-  return new Promise((resolve) => view.requestAnimationFrame(() => resolve()));
+  if (!view || ownerDocument.visibilityState === "hidden") return Promise.resolve();
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      view.clearTimeout(timeoutId);
+      resolve();
+    };
+    const timeoutId = view.setTimeout(finish, 100);
+    view.requestAnimationFrame(finish);
+  });
 }
 
 function isQuestionRoot(question: HTMLElement): boolean {

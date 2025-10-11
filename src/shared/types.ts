@@ -71,6 +71,7 @@ export interface FieldMatchFeedback {
 export interface StableElementLocator {
   id?: string;
   name?: string;
+  ariaLabelledBy?: string;
   tagName: string;
 }
 

@@ -424,20 +424,56 @@ Lưu ý:
 
 ### HTML manual fixtures
 
-Serve the repository root before manually testing the extension. This avoids
-the extra `file://` permissions required by MV3 content scripts:
+Không có backend/API cần chạy: extension lưu profile trong `chrome.storage.local`, còn fixture là
+HTML tĩnh. Cài dependency một lần bằng `npm ci`. Để kiểm thử thủ công, build development và phục vụ
+chính thư mục `dist/` (tránh cần quyền `file://` của MV3):
 
 ```bash
 npm run build:dev
 npm run serve:fixtures
 ```
 
-Then open [the fixture directory](http://localhost:4173/tests/fixtures/html/).
-The server binds only to `127.0.0.1` and uses port `4173`. Each fixture belongs
-in `tests/fixtures/html/`, next to its matching `expected.json` file. Load the
-`dist/` folder as the unpacked extension after `build:dev`; it adds
-`http://localhost:*/*` only to the development build's content-script matches.
-The normal `npm run build` manifest remains publish-safe and excludes it.
+Server chỉ bind `127.0.0.1:4173`. Trong Chrome/Edge, mở `chrome://extensions` hoặc
+`edge://extensions`, bật **Developer mode**, chọn **Load unpacked** và chọn thư mục `dist/`.
+Mở popup extension để lưu profile test, sau đó mở fixture tổng duyệt tại
+[http://127.0.0.1:4173/manual-test/realistic-combined.html](http://127.0.0.1:4173/manual-test/realistic-combined.html).
+Sau mỗi lần `build:dev`, bấm **Reload** extension rồi reload tab fixture. Development manifest thêm
+`http://localhost:*/*` và `http://127.0.0.1:*/*`. **Không chạy `npm run build` sau `build:dev` khi
+đang test fixture**, vì production build sẽ thay `dist/manifest.json` và chủ ý xoá cả hai quyền local.
+Chỉ chạy production build sau khi kết thúc kiểm thử thủ công.
+
+### Checklist tổng duyệt `realistic-combined.html`
+
+Nhập profile sau trong popup: Họ tên `Nguyễn Văn An`; CCCD `079200012345`; SĐT `0901234567`;
+Email `an@example.com`; ngày sinh `2000-05-12`; Tỉnh `Hồ Chí Minh`; Xã `Phường Bến Nghé`;
+giới tính `Nam`. Chạy extension (tải lại trang nếu content script đã chạy trước khi lưu profile),
+rồi đối chiếu [realistic-combined.expected.json](public/manual-test/realistic-combined.expected.json):
+
+|Hạng mục|Kết quả đạt|
+|---|---|
+|Hồ sơ cơ bản|Họ tên, CCCD, SĐT và Email được điền, overlay báo `filled`|
+|Ngày sinh select|Ngày `12`, Tháng `05`, Năm `2000`|
+|Cascade địa chỉ|Tỉnh chọn option mã `79`; sau khi form nạp option, Xã chọn mã `26734` (Phường Bến Nghé)|
+|Giới tính|Chỉ radio `Nam` được chọn|
+|Policy Gate|Checkbox điều khoản vẫn bỏ trống, trạng thái `policy_blocked`|
+|Honeypot|Ô `#contact-phone-confirm` ẩn vẫn rỗng và không có kết quả fill|
+|Không tự submit|Nút submit, nếu có ở form thật, không bị extension bấm|
+
+Kiểm tra thêm GĐ5 tại `/manual-test/stress-many-fields.html` (log toàn form SCAN→MATCH không quá
+`1000ms`) và `/manual-test/stress-frequent-mutation.html` (sau 20 mutations chỉ một lượt re-scan
+sau debounce 200ms).
+
+### Checklist build release mới nhất
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+Các lệnh trên phải pass trước khi phát hành. Artifact mới nhất là thư mục `dist/`; nạp thư mục này
+qua **Load unpacked** để smoke test production. Xác nhận `dist/manifest.json` không chứa `localhost`
+trước khi đóng gói/phát hành.
 
 |Loại test|Công cụ|Nội dung|
 |---|---|---|

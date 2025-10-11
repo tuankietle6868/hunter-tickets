@@ -221,6 +221,29 @@ describe("Autofill overlay", () => {
     expect(input.style.outline).toBe("3px solid #2563eb");
   });
 
+  it("keeps field jump controls in their row instead of applying close-button positioning", () => {
+    const input = document.createElement("input");
+    document.body.append(input);
+    showAutofillOverlay(
+      [
+        {
+          elementRef: new WeakRef(input),
+          candidateType: "FULL_NAME",
+          confidence: 100,
+          signals: { labelText: "Họ và tên" },
+          status: "prepopulated",
+        } as DetectedField,
+      ],
+      document,
+      { onRescan: vi.fn(), onRefill: vi.fn(), onFieldSelect: vi.fn() },
+    );
+
+    const shadow = document.getElementById(OVERLAY_HOST_ID)?.shadowRoot;
+    expect(shadow?.querySelector(".close-button")).not.toBeNull();
+    expect(shadow?.querySelector(".field-jump")).not.toBeNull();
+    expect(shadow?.querySelector(".field-jump")?.classList.contains("close-button")).toBe(false);
+  });
+
   it("lets the user correct a match and saves the selected field type", async () => {
     const onFieldCorrection = vi.fn(async () => undefined);
     const field = {

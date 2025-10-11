@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
-const LOCALHOST_MATCH = "http://localhost:*/*";
+const DEVELOPMENT_FIXTURE_MATCHES = ["http://localhost:*/*", "http://127.0.0.1:*/*"];
 
 export default defineConfig(({ mode }) => ({
   plugins:
@@ -17,8 +17,10 @@ export default defineConfig(({ mode }) => ({
               };
 
               for (const contentScript of manifest.content_scripts) {
-                if (!contentScript.matches.includes(LOCALHOST_MATCH)) {
-                  contentScript.matches.push(LOCALHOST_MATCH);
+                for (const match of DEVELOPMENT_FIXTURE_MATCHES) {
+                  if (!contentScript.matches.includes(match)) {
+                    contentScript.matches.push(match);
+                  }
                 }
               }
 

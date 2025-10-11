@@ -14,6 +14,7 @@ describe("autofill policy", () => {
       "PHONE",
       "EMAIL",
       "DATE_OF_BIRTH",
+      "ADDRESS",
       "PROVINCE",
       "WARD",
       "DISTRICT_LEGACY",
@@ -23,6 +24,7 @@ describe("autofill policy", () => {
 
   it("permits whitelisted personal fields but never unknown fields", () => {
     expect(isAutoFillPermitted("FULL_NAME", "INPUT")).toBe(true);
+    expect(isAutoFillPermitted("ADDRESS", "TEXTAREA")).toBe(true);
     expect(isAutoFillPermitted("PROVINCE", "SELECT")).toBe(true);
     expect(isAutoFillPermitted("UNKNOWN", "CHECKBOX")).toBe(false);
   });
@@ -45,5 +47,22 @@ describe("autofill policy", () => {
     expect(isHardPolicyBlocked({ labelText: "Xác nhận Email" }, "EMAIL")).toBe(false);
     expect(isHardPolicyBlocked({ labelText: "Nhập lại SĐT" }, "PHONE")).toBe(false);
     expect(isHardPolicyBlocked({ labelText: "Xác nhận thông tin" }, "UNKNOWN")).toBe(true);
+  });
+
+  it("does not confuse confirmation wording in an address text field with consent", () => {
+    expect(
+      isHardPolicyBlocked(
+        { labelText: "Địa chỉ liên hệ (vui lòng xác nhận trước khi gửi)" },
+        "ADDRESS",
+        "TEXTAREA",
+      ),
+    ).toBe(false);
+    expect(
+      isHardPolicyBlocked(
+        { labelText: "Tôi đồng ý điều khoản" },
+        "UNKNOWN",
+        "CHECKBOX",
+      ),
+    ).toBe(true);
   });
 });

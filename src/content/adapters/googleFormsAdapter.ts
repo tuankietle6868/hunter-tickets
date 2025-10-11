@@ -59,13 +59,23 @@ function radioOptions(input: HTMLElement): HTMLElement[] {
 
 function afterNextAnimationFrame(ownerDocument: Document): Promise<void> {
   const view = ownerDocument.defaultView;
-
-  if (!view) {
+  // Browsers pause requestAnimationFrame in a background tab. Verification
+  // must not leave the entire autofill pipeline pending until that tab becomes
+  // visible again (or the extension is reloaded).
+  if (!view || ownerDocument.visibilityState === "hidden") {
     return Promise.resolve();
   }
 
   return new Promise((resolve) => {
-    view.requestAnimationFrame(() => resolve());
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      view.clearTimeout(timeoutId);
+      resolve();
+    };
+    const timeoutId = view.setTimeout(finish, 100);
+    view.requestAnimationFrame(finish);
   });
 }
 
